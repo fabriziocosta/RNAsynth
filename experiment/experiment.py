@@ -92,18 +92,6 @@ def rfam_url(family_id):
 	return 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0'%(family_id,family_id)
 
 
-def create_sequence_pool(rfam_id):
-	"""
-	Creates a list containing all RNA sequences which belong to "rfam_id".
-	"""
-	from eden.converter.fasta import fasta_to_sequence
-	iterable = fasta_to_sequence(rfam_url(rfam_id))
-	sequence_pool = []
-	for fasta in iterable:
-		sequence_pool.append(fasta[1])
-	return sequence_pool
-
-
 def run_epoch(runs = None , antaRNA_param_file = None , performance_log_file = None , graphs_pos_test = None , graphs_neg_test = None , \
 		graphs_pos_train = None , graphs_neg_train = None , nt_importance_threshold=0, nmin_important_nt_adjaceny=1, \
 		bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1, \
