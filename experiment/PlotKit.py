@@ -1,23 +1,12 @@
 #!/usr/bin/env python
 
-import os
-from os.path import expanduser
 import numpy as np
 from numpy import *
 import matplotlib.pyplot as plt
-import pandas
-from pandas import *
 import argparse
 import scipy as sp
 from scipy.optimize import curve_fit
 from numpy import exp
-
-
-def get_column(dframe,col_name):
-	
-	listdf = dframe.describe().loc[col_name].tolist()
-	
-	return listdf
 
 
 def func(x, a, b):
@@ -52,77 +41,29 @@ def xpDecay_plot(x, yt, ys, measure):
 	return True
 
 
-def cBox_plot(df1,df2,measure):
+def xpDecay(iterable_t = None , iterable_s = None, measure = None):
 	"""
-	Draws box plots of two sets of data in one figure.
-	Accepts pandas dataframes as input.
+	Accepts as input an iterator over lists of numbers.
+	Draws the exponential decay grpah over the means of lists.
 	"""
-	fig, ax1 = plt.subplots(figsize=(10,6))
-	fig.canvas.set_window_title('BoxPlot Comparisons')
-	plt.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
-	
-	plt.ylim(0.98,1.001)
-	
-	ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-	
-	ax1.set_title('%s BoxPlot Comparison' %measure)
-	ax1.set_xlabel('Dataset Percentage Used for Training')
-	ax1.set_ylabel('%s' %measure)
-	
-	bp1 = df1.boxplot(notch=0, sym='+', vert=1, whis=1.5)
-	plt.setp(bp1['boxes'], color='red')
-	plt.setp(bp1['whiskers'], color='red')
-	plt.setp(bp1['medians'], linewidth=3, color='blue')
-	plt.setp(bp1['fliers'], color='red', marker='+')
-	
-	bp2 = df2.boxplot(notch=0, sym='+', vert=1, whis=1.5)
-	plt.setp(bp2['boxes'], color='green')
-	plt.setp(bp2['whiskers'], color='green')
-	plt.setp(bp2['medians'], linewidth=3, color='orange')
-	plt.setp(bp2['fliers'], color='green', marker='+')
-	
-	
-	plt.figtext(0.80, 0.06,  'True Samples' , \
-		backgroundcolor='blue', color='white', weight='roman', \
-		size='medium')
-	plt.figtext(0.80, 0.025, 'Mixed Samples', \
-		backgroundcolor='orange', \
-		color='white', weight='roman', size='medium')
-	plt.legend(loc = 4)
-	plt.show()
-	
-	return True
+	means_t = []
+	for list in iterable_t:
+		means_t.append(mean(np.array(list)))
+	print means_t
+
+	means_s = []
+	for list in iterable_s:
+		means_s.append(mean(np.array(list)))
+	print means_s
+	x = np.array([n for n in range(10, (len(means_t) + 1)*10, 10)])
+	print x
+	xpDecay_plot(x , means_t , means_s , measure)
 
 
 if __name__ == "__main__":
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-m', '--measure',required = True)
-	parser.add_argument('-s', '--save', action = 'store_true')
-	parser.add_argument('-f1', '-file1', required = True)
-	parser.add_argument('-f2', '-file2', required = True)
-	args = parser.parse_args()
-	my_measure = args.measure
-	my_image = my_measure + '.png'
-	home = expanduser("~")
-	my_path = os.path.join(home,my_image)
-	
-	file1 = args.file1
-	file2 = args.file2
-	
-	x = np.array([10,20,30,40,50,60,70,80,90,100])
+	a_t = [[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833] , [0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833],[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833]]
+	a_s = [[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803]]
 
-	dframe1 = read_csv(file1,header=0)
-	dframe2 = read_csv(file2,header=0)
-	
-	yt = np.array(get_column(dframe1,'mean'))
-	ys = np.array(get_column(dframe2,'mean'))
-	
-	#xpDecay_plot(x, yt, ys, my_measure)
-	cBox_plot(dframe1, dframe2, my_measure)
-	
-	if args.save:
-		plt.savefig(my_path)
-		
-	plt.show()
+	xpDecay(iterable_t = a_t , iterable_s = a_s , measure = 'TEST')
 
