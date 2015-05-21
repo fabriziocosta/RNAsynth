@@ -3,20 +3,21 @@
 import logging
 from antaParams import antaParams
 import antaRNA_v109
-import sys
 from eden import graph
 from eden.converter.rna.rnafold import rnafold_to_eden
 from eden.converter.fasta import fasta_to_sequence
-from eden.modifier.seq import seq_to_seq,  shuffle_modifier
-from itertools import tee
+from itertools import tee, izip
 import random
-import time
 import ConstraintFinder as cf
+
 
 random_gen_bound = 100000
 
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
+
+
+logger = logging.getLogger(__name__)
 
 
 def sequence_to_fasta(sequences):
@@ -32,7 +33,7 @@ def generate_antaRNA_sequence(dot_bracket_constraint_string = None, sequence_con
 	result = ', '.join(antaRNA_v109.findSequence(dot_bracket_constraint_string,sequence_constraint_string,gc_content,**antaParams.to_dict()))
 	header = original_header + '_' + str(random.randrange(random_gen_bound))
 	sequence = result.split("\n")[2]
-	return [header,sequence]
+	return header,sequence
 
 
 def design_RNA(param_file = None , iterable = None, vectorizer = None, estimator = None, \
@@ -59,22 +60,17 @@ def design_RNA(param_file = None , iterable = None, vectorizer = None, estimator
 def filter_sequences(iterable = None, vectorizer = None, estimator = None , threshold = 0):
 	"""
 	Filter. Returns a subset of the iterable with marginal prediction above filtering_threshold.
-	Takes as input a list of fasta sequences. Outputs an iterator over a list of fasta sequences.
+	Takes as input a list of fasta sequences. Outputs an iterator over a list of eden sequences.
 	"""
-	iterable_sequence = fasta_to_sequence( iterable )
-	iterable_sequence, iterable_sequence_for_graphs, iterable_sequence_for_headers = tee( iterable_sequence, 3 )
+	iterable_sequence, iterable_sequence_for_graphs = tee( iterable )
 	graphs = rnafold_to_eden( iterable_sequence_for_graphs )
-
 	predictions = vectorizer.predict( graphs , estimator )
-	prediction_list = [prediction for prediction in predictions]
-	fasta_list = [seq_line for seq_line in iterable_sequence_for_headers]
-	candidate_list = zip( prediction_list , fasta_list)
-	for candidate in candidate_list:
-		if candidate[0] > threshold:
-			yield sequence_to_fasta(candidate[1])
+	for prediction,seq in izip( predictions , iterable_sequence):
+		if prediction > threshold:
+			yield seq
 
 
-def design_filtered_RNA(param_file = None , iterable = None, vectorizer = None, design_estimator = None, filter_estimator = None \
+def design_filtered_RNA(param_file = None , iterable = None, vectorizer = None, design_estimator = None, filter_estimator = None, \
 			nt_importance_threshold = 0, nmin_important_nt_adjaceny = 1, bp_importance_threshold = 0, nmin_important_bp_adjaceny = 1, \
 			nmin_unpaired_nt_adjacency = 1, multi_sequence_size = 1 , filtering_threshold = 0):
 
@@ -90,13 +86,22 @@ def design_filtered_RNA(param_file = None , iterable = None, vectorizer = None, 
 			bp_importance_threshold = bp_importance_threshold, nmin_important_bp_adjaceny = nmin_important_bp_adjaceny, \
 			nmin_unpaired_nt_adjacency = nmin_unpaired_nt_adjacency , multi_sequence_size = multi_sequence_size)
 
-	fasta_list = [fasta_seq for fasta_seq in iterator]
-	
-	iterable = filter_sequences(iterable = fasta_list, vectorizer = vectorizer, estimator = filter_estimator , threshold = filtering_threshold)
+	iterable = filter_sequences(iterable = iterable, vectorizer = vectorizer, estimator = filter_estimator , threshold = filtering_threshold)
 	return iterable
 
 
 if __name__ == "__main__":
-	
-	logger = logging.getLogger(__name__)
+
+
 	logger.info('Call to RNA Design Tools package.')
+	
+	opts={'antaRNA_param_file':'/home/kohvaeip/RNAsynth/lib/antaRNA/antaRNA.ini' , \
+	'nt_importance_threshold':-1.1 , 'nmin_important_nt_adjaceny':1 , 'bp_importance_threshold':-0.85 , \
+	'nmin_important_bp_adjaceny':3 , 'nmin_unpaired_nt_adjacency':3 , 'multi_sequence_size':3, 'filtering_threshold':0}
+	
+	rfam_id = 'RF00005'
+	rfam_url = 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0'%(family_id,family_id) 
+	iterable = fasta_to_sequence(rfam_url)
+	iterable = rnafold_to_eden(iterable)
+
+	#sequences = design_filtered_RNA()
