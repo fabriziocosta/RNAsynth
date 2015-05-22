@@ -6,4 +6,3 @@ These constraints can be used by AntRNA to finally synthesize compatible sequenc
 # Developers
 
 * Parastou Kohvaei
-* foo
