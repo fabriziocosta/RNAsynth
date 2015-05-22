@@ -12,6 +12,15 @@ from numpy import exp
 def func(x, a, b):
 	return a * (1 - np.exp(-b * x))
 
+"""
+f1 = plt.figure()
+f2 = plt.figure()
+ax1 = f1.add_subplot(111)
+ax1.plot(range(0,10))
+ax2 = f2.add_subplot(111)
+ax2.plot(range(10,20))
+plt.show()
+"""
 
 def xpDecay_plot(x, yt, ys, measure):
 	"""
@@ -49,14 +58,13 @@ def xpDecay(iterable_t = None , iterable_s = None, measure = None):
 	means_t = []
 	for list in iterable_t:
 		means_t.append(mean(np.array(list)))
-	print means_t
 
 	means_s = []
 	for list in iterable_s:
 		means_s.append(mean(np.array(list)))
-	print means_s
+
 	x = np.array([n for n in range(10, (len(means_t) + 1)*10, 10)])
-	print x
+
 	xpDecay_plot(x , means_t , means_s , measure)
 
 
@@ -65,5 +73,5 @@ if __name__ == "__main__":
 	a_t = [[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833] , [0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833],[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833]]
 	a_s = [[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803]]
 
-	xpDecay(iterable_t = a_t , iterable_s = a_s , measure = 'TEST')
+	xpDecay(iterable_t = a_t , iterable_s = a_s , measure = 'ROC')
 
