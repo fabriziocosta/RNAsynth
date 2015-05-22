@@ -17,6 +17,7 @@ from eden.modifier.seq import shuffle_modifier
 from eden.util import random_bipartition_iter
 import argparse
 
+logger = logging.getLogger(__name__)
 
 def rfam_url(family_id):
 	return 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0'%(family_id,family_id)
@@ -144,6 +145,7 @@ def get_args():
 	"""
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--rfam_id', '-i', type = str , default = 'RF00005')
+	# --log_file is not currently used.
 	parser.add_argument('--log_file', '-l', type = str , default = '~/Synthesis.log')
 	parser.add_argument('--antaRNA_params', '-p', type = str , default = './antaRNA.ini')
 	parser.add_argument('--nt_importance_threshold', '-a', type = int , default = 0)
@@ -158,25 +160,19 @@ def get_args():
 	parser.add_argument('--experiment_runs', '-j', type = int , default = 10)
 	parser.add_argument('--split_ratio', '-r' , type = float , default = 0.2)
 	args = parser.parse_args()
-
-	params = {'rfam_id':args.rfam_id , 'log_file':args.log_file , 'antaRNA_param_file':args.antaRNA_params , \
-			'nt_importance_threshold':args.nt_importance_threshold , 'nmin_important_nt_adjaceny':args.nmin_important_nt_adjaceny ,\
-			'bp_importance_threshold':args.bp_importance_threshold , 'nmin_important_bp_adjaceny':args.nmin_important_bp_adjaceny ,\
-			'nmin_unpaired_nt_adjacency':args.nmin_unpaired_nt_adjacency , 'multi_sequence_size':args.multi_sequence_size ,\
-			'filtering_threshold':args.filtering_threshold , 'batch_proportion':args.batch_proportion , 'epoch_instances':args.epoch_instances ,\
-			'experiment_runs':args.experiment_runs, 'split_ratio':args.split_ratio}
-
-	return params
+	return args
 
 
-def experiment():
+def experiment(params):
 	"""
 	Main body of RNASynthesis experiment.
 	"""
 	#logger = logging.getLogger()
 	#logger.basicConfig(level=logging.INFO)
 
-	params = get_args()
+
+	
+	logger.info('Starting RNA Synthesis experiment for %s ...' % params['rfam_id'])
 
 	iterable_pos = fasta_to_sequence( rfam_url(params['rfam_id']) )
 	iterable_pos, iterable_pos_ = tee(iterable_pos)
@@ -210,7 +206,7 @@ def experiment():
 							bp_importance_threshold=params['bp_importance_threshold'], nmin_important_bp_adjaceny=params['nmin_important_bp_adjaceny'], \
 							nmin_unpaired_nt_adjacency=params['nmin_unpaired_nt_adjacency'], synthesized_batch_proportion=params['batch_proportion'], \
 							multi_sequence_size=params['multi_sequence_size'], filtering_threshold =params['filtering_threshold'], \
-							runs = params['epoch_instances'], relative_size = prct, antaRNA_param_file =params['antaRNA_param_file'] ,\
+							runs = params['epoch_instances'], relative_size = prct, antaRNA_param_file =params['antaRNA_params'] ,\
 							performance_log_file =params['log_file'])
 
 		sys.stdout.write('Performance measures for epoch: %d\n' %counter)
@@ -242,6 +238,7 @@ if __name__ == "__main__":
 	logger = logging.getLogger(__name__)
 	logger.info('Call to experiment module.')
 
+	params = vars(get_args())
 
-	experiment()
+	roc_t , roc_s , apr_t , apr_s = experiment(params)
 
