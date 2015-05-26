@@ -4,6 +4,8 @@ import re
 import logging
 import networkx as nx
 
+logger = logging.getLogger(__name__)
+
 
 def dict_to_string(dictionary):
 	"""
@@ -188,5 +190,4 @@ def generate_antaRNA_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_
 if __name__ == "__main__":
 
 	logging.basicConfig(level=logging.INFO)
-	logger = logging.getLogger(__name__)
 	logger.info('Call to ConstraintFinder package.')

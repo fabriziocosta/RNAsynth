@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import logging
-from antaParams import antaParams
-import antaRNA_v109
 from eden import graph
 from eden.converter.rna.rnafold import rnafold_to_eden
 from eden.converter.fasta import fasta_to_sequence
 from itertools import tee, izip
 import random
-import ConstraintFinder as cf
+from lib.antaRNA import antaParams
+from lib.antaRNA import antaRNA_v109
+from lib.RNADesign import ConstraintFinder as cf
 
 
 random_gen_bound = 100000
@@ -46,6 +46,7 @@ def design_RNA(param_file = None , iterable = None, vectorizer = None, estimator
 	Uses antaRNA for sequence synthesis and EDeN for annotating networkx graphs.
 	Yields as output [header,sequence].
 	"""
+	assert param_file is not None, 'ERROR: empty param_file'
 	op = antaParams(param_file)
 
 	iterable = vectorizer.annotate(iterable, estimator=estimator)
