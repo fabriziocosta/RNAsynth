@@ -35,7 +35,7 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
     train_size = 0
     for graph in graphs_counter:
         train_size += 1
-    #logger.info('Number of training samples in this epoch: %d\n' %train_size)
+    logger.info('Number of training samples in this epoch: %d\n' %train_size)
     batch_size = train_size * synthesized_batch_proportion
     # Design the batch of new sequences.
     fasta_iterable = rdt.design_filtered_RNA(param_file=antaRNA_param_file,
@@ -82,7 +82,7 @@ def run_epoch(runs=None, relative_size=None, antaRNA_param_file=None, performanc
     measure_list_APRS = []
 
     for epoch in range(1, runs + 1):
-
+    	logger.debug('Epoch %d/%d'%(epoch, runs))
         graphs_pos_test, graphs_pos_test_epoch_1, graphs_pos_test_epoch_2 = tee(graphs_pos_test, 3)
         graphs_neg_test, graphs_neg_test_epoch_1, graphs_neg_test_epoch_2 = tee(graphs_neg_test, 3)
 
@@ -104,7 +104,7 @@ def run_epoch(runs=None, relative_size=None, antaRNA_param_file=None, performanc
         vectorizer = Vectorizer(complexity=2)
 
         # Train TrueSamplesModel classifier.
-        estimator = fit(graphs_pos_train_epoch_1, graphs_neg_train_epoch_1, vectorizer, n_jobs=1, cv=3)
+        estimator = fit(graphs_pos_train_epoch_1, graphs_neg_train_epoch_1, vectorizer, n_jobs=-1, cv=3, n_iter_search=1)
 
         # Design the batch of new sequences.
         designed_iterable = produce_batch_RNA(graphs=graphs_pos_train_epoch_2, vectorizer=vectorizer, estimator=estimator, **opts)
@@ -124,15 +124,15 @@ def run_epoch(runs=None, relative_size=None, antaRNA_param_file=None, performanc
         graphs_mixed_neg = chain(graphs_neg_train_epoch_2, graphs_neg_synthesized)
 
         # Train MixedSamplesModel classifier.
-        estimator2 = fit(graphs_mixed_pos, graphs_mixed_neg, vectorizer, n_jobs=1, cv=3)
+        estimator2 = fit(graphs_mixed_pos, graphs_mixed_neg, vectorizer, n_jobs=-1, cv=3, n_iter_search=1)
 
         # Test the test set against TrueSamplesModel -> output performance
         logger.info('Evaluating the True model performance:')
-        roc_t, apr_t = estimate(graphs_pos_test_epoch_1, graphs_neg_test_epoch_1, estimator, vectorizer, n_jobs=1)
+        roc_t, apr_t = estimate(graphs_pos_test_epoch_1, graphs_neg_test_epoch_1, estimator, vectorizer, n_jobs=-1)
 
         # Test the test set against SynthesizedSamplesModel -> output performance
         logger.info('Evaluating the mixed model performance:')
-        roc_s, apr_s = estimate(graphs_pos_test_epoch_2, graphs_neg_test_epoch_2, estimator2, vectorizer, n_jobs=1)
+        roc_s, apr_s = estimate(graphs_pos_test_epoch_2, graphs_neg_test_epoch_2, estimator2, vectorizer, n_jobs=-1)
 
         # Additional sample counts:
         measure_list_ROCT.append(roc_t)

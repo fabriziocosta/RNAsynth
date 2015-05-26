@@ -6,7 +6,7 @@ from eden.converter.rna.rnafold import rnafold_to_eden
 from eden.converter.fasta import fasta_to_sequence
 from itertools import tee, izip
 import random
-from lib.antaRNA import antaParams
+from lib.antaRNA.antaParams import antaParams
 from lib.antaRNA import antaRNA_v109
 from lib.RNADesign import ConstraintFinder as cf
 
