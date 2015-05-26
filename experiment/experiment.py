@@ -167,11 +167,6 @@ def experiment(params):
 	"""
 	Main body of RNASynthesis experiment.
 	"""
-	#logger = logging.getLogger()
-	#logger.basicConfig(level=logging.INFO)
-
-
-	
 	logger.info('Starting RNA Synthesis experiment for %s ...' % params['rfam_id'])
 
 	iterable_pos = fasta_to_sequence( rfam_url(params['rfam_id']) )
@@ -222,8 +217,7 @@ def experiment(params):
 		exp_roc_s.append(mrocs)
 		exp_apr_t.append(maprt)
 		exp_apr_s.append(maprs)
-	return 	exp_roc_t.append(mroct) , exp_roc_s.append(mrocs) , exp_apr_t.append(maprt) , exp_apr_s.append(maprs)
-
+	return 	exp_roc_t , exp_roc_s , exp_apr_t , exp_apr_s
 
 
 if __name__ == "__main__":
