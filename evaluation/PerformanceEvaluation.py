@@ -13,7 +13,7 @@ from eden.util import random_bipartition_iter
 from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
 from eden.util import random_bipartition_iter
-from lib.RNADesign import RNADesignTools as rdt
+from RNADesign import RNADesignTools as rdt
 
 import argparse
 import logging
