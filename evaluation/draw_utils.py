@@ -9,30 +9,28 @@ from scipy.optimize import curve_fit
 from numpy import exp
 
 
-def func(x, a, b):
+def learning_curve_function(x, a, b):
 	return a * (1 - np.exp(-b * x))
 
-"""
-f1 = plt.figure()
-f2 = plt.figure()
-ax1 = f1.add_subplot(111)
-ax1.plot(range(0,10))
-ax2 = f2.add_subplot(111)
-ax2.plot(range(10,20))
-plt.show()
-"""
-
-def xpDecay_plot(x, yt, ys, measure):
+def draw_learning_curve(data_A = None , data_B = None, measure = None, x=None):
 	"""
-	Plots the exponential decay curve of two sets of datasets in one figure.
-	Accepts numpy arrays as input.
+	Accepts as input an iterator over lists of numbers.
+	Draws the exponential decay grpah over the means of lists.
 	"""
-	a, b = curve_fit(func, x, yt)
-	c, d = curve_fit(func, x, ys)
+	mean_originals = []
+	for originals in data_A:
+		mean_originals.append(mean(np.array(originals)))
 
-	xnew = np.linspace(x.min(),x.max(),100)
-	ytnew = func(xnew, *a)
-	ysnew = func(xnew, *c)
+	mean_originals_and_samples = []
+	for originals_and_samples in data_B:
+		mean_originals_and_samples.append(mean(np.array(originals_and_samples)))
+
+	a, b = curve_fit(learning_curve_function, x, mean_originals)
+	c, d = curve_fit(learning_curve_function, x, mean_originals_and_samples)
+
+	x_fit = np.linspace(x.min(),x.max(),100)
+	mean_originals_fit = learning_curve_function(x_fit, *a)
+	mean_originals_and_samples_fit = learning_curve_function(x_fit, *c)
 
 	fig, ax1 = plt.subplots(figsize=(10,6))
 	fig.canvas.set_window_title('Exponential Decay Learning Curves')
@@ -43,29 +41,17 @@ def xpDecay_plot(x, yt, ys, measure):
 	ax1.set_xlabel('Dataset Percentage Used for Training')
 	ax1.set_ylabel('%s Value' %measure)
 	
-	plt.plot(xnew, ytnew, 'r-', label='True Samples')
-	plt.plot(xnew, ysnew, 'g-', label='Mixed Samples')
-	plt.legend(loc = 4)
+	delta=0.25
+	plt.boxplot(data_A,positions=x-delta)
+	plt.plot(x, mean_originals, 'ro', label='')
+	plt.plot(x_fit, mean_originals_fit, 'r-', label='True Samples')
+
+	plt.boxplot(data_B,positions=x+delta)
+	plt.plot(x, mean_originals_and_samples, 'go', label='')
+	plt.plot(x_fit, mean_originals_and_samples_fit, 'g-', label='Mixed Samples')
+	plt.grid()
+	plt.legend(loc = 'lower right')
 	plt.show()
-	return True
-
-
-def xpDecay(iterable_t = None , iterable_s = None, measure = None):
-	"""
-	Accepts as input an iterator over lists of numbers.
-	Draws the exponential decay grpah over the means of lists.
-	"""
-	means_t = []
-	for list in iterable_t:
-		means_t.append(mean(np.array(list)))
-
-	means_s = []
-	for list in iterable_s:
-		means_s.append(mean(np.array(list)))
-
-	x = np.array([n for n in range(10, (len(means_t) + 1)*10, 10)])
-
-	xpDecay_plot(x , means_t , means_s , measure)
 
 
 if __name__ == "__main__":
@@ -73,5 +59,4 @@ if __name__ == "__main__":
 	a_t = [[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833] , [0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833],[0.9369060577707512, 0.90133724392800463, 0.91931597267587639, 0.97606301975925636, 0.96563464634494833]]
 	a_s = [[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803],[0.96680658753051796, 0.94292599838634872, 0.95301928482157527, 0.9875969646313193, 0.98568403900205803]]
 
-	xpDecay(iterable_t = a_t , iterable_s = a_s , measure = 'ROC')
-
+	draw_learning_curve(data_A = a_t , data_B = a_s , measure = 'ROC')

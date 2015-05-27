@@ -35,7 +35,7 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
     train_size = 0
     for graph in graphs_counter:
         train_size += 1
-    logger.info('Number of training samples in this epoch: %d\n' %train_size)
+    logger.info('Number of training samples in this epoch: %d\n' % train_size)
     batch_size = train_size * synthesized_batch_proportion
     # Design the batch of new sequences.
     fasta_iterable = rdt.design_filtered_RNA(param_file=antaRNA_param_file,
@@ -57,7 +57,7 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
         yield seq
 
 
-def run_epoch(runs=None, relative_size=None, antaRNA_param_file=None, performance_log_file=None,
+def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=None, performance_log_file=None,
               graphs_pos_test=None, graphs_neg_test=None, graphs_pos_train=None, graphs_neg_train=None,
               nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
               bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
@@ -81,8 +81,9 @@ def run_epoch(runs=None, relative_size=None, antaRNA_param_file=None, performanc
     measure_list_ROCS = []
     measure_list_APRS = []
 
-    for epoch in range(1, runs + 1):
-    	logger.debug('Epoch %d/%d'%(epoch, runs))
+    for epoch in range(experiment_repetitions):
+        logger.info('-' * 80)
+        logger.info('run %d/%d' % (epoch+1, experiment_repetitions))
         graphs_pos_test, graphs_pos_test_epoch_1, graphs_pos_test_epoch_2 = tee(graphs_pos_test, 3)
         graphs_neg_test, graphs_neg_test_epoch_1, graphs_neg_test_epoch_2 = tee(graphs_neg_test, 3)
 
@@ -163,14 +164,14 @@ def get_args():
     parser.add_argument('--multi_sequence_size', '-n', type=int, default=1)
     parser.add_argument('--filtering_threshold', '-f', type=int, default=0)
     parser.add_argument('--batch_proportion', '-g', type=int, default=1)
-    parser.add_argument('--epoch_instances', '-k', type=int, default=10)
-    parser.add_argument('--experiment_runs', '-j', type=int, default=10)
+    #parser.add_argument('--epoch_instances', '-k', type=int, default=10)
+    parser.add_argument('--experiment_repetitions', '-j', type=int, default=10)
     parser.add_argument('--split_ratio', '-r', type=float, default=0.2)
     args = parser.parse_args()
     return args
 
 
-def experiment(params):
+def compute_learning_curves(params):
     """
     Main body of RNASynthesis experiment.
     """
@@ -193,14 +194,13 @@ def experiment(params):
     exp_apr_t = []
     exp_apr_s = []
 
-    for counter in range(1, 11):
-        logger.info('Starting epoch %s:' % counter)
+    for i,data_fraction in enumerate(params["data_fractions"]):
+        logger.info('=' * 80)
+        logger.info('Training on data chunk %d/%d (data fraction: %.1f)' % (i,len(params["data_fractions"]),data_fraction))
         graphs_pos_train, graphs_pos_train_c = tee(graphs_pos_train)
         graphs_pos_test, graphs_pos_test_c = tee(graphs_pos_test)
         graphs_neg_train, graphs_neg_train_c = tee(graphs_neg_train)
         graphs_neg_test, graphs_neg_test_c = tee(graphs_neg_test)
-
-        prct = float(counter) / 10
 
         mroct, maprt, mrocs, maprs, elapsed_time = run_epoch(graphs_pos_test=graphs_pos_test_c,
                                                              graphs_neg_test=graphs_neg_test_c,
@@ -214,24 +214,25 @@ def experiment(params):
                                                              synthesized_batch_proportion=params['batch_proportion'],
                                                              multi_sequence_size=params['multi_sequence_size'],
                                                              filtering_threshold=params['filtering_threshold'],
-                                                             runs=params['epoch_instances'],
-                                                             relative_size=prct,
+                                                             experiment_repetitions=params['experiment_repetitions'],
+                                                             relative_size=data_fraction,
                                                              antaRNA_param_file=params['antaRNA_params'])
 
-        logger.info('Performance measures for epoch: %d\n' % counter)
-        logger.info('ROC for True samples: \n')
-        logger.info('%s \n' % mroct)
-        logger.info('ROC for Mixed samples: \n')
-        logger.info('%s \n' % mrocs)
-        logger.info('APR for True samples: \n')
-        logger.info('%s \n' % maprt)
-        logger.info('APR for Mixed samples: \n')
-        logger.info('%s \n' % maprs)
+        logger.info('Performance measures for data fraction: %.1f' % data_fraction)
+        logger.info('ROC for True samples:')
+        logger.info('%s' % mroct)
+        logger.info('ROC for Mixed samples:')
+        logger.info('%s' % mrocs)
+        logger.info('APR for True samples:')
+        logger.info('%s' % maprt)
+        logger.info('APR for Mixed samples:')
+        logger.info('%s' % maprs)
+        logger.info('Elapsed time: %s' % elapsed_time)
         exp_roc_t.append(mroct)
         exp_roc_s.append(mrocs)
         exp_apr_t.append(maprt)
         exp_apr_s.append(maprs)
-    return exp_roc_t, exp_roc_s, exp_apr_t, exp_apr_s
+    return exp_roc_t, exp_roc_s, exp_apr_t, exp_apr_s, params["data_fractions"]
 
 
 if __name__ == "__main__":
