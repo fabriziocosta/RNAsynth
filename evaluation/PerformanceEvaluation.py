@@ -35,7 +35,6 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
     train_size = 0
     for graph in graphs_counter:
         train_size += 1
-    logger.info('Number of training samples in this epoch: %d\n' % train_size)
     batch_size = train_size * synthesized_batch_proportion
     # Design the batch of new sequences.
     fasta_iterable = rdt.design_filtered_RNA(param_file=antaRNA_param_file,
@@ -61,7 +60,8 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
               graphs_pos_test=None, graphs_neg_test=None, graphs_pos_train=None, graphs_neg_train=None,
               nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
               bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
-              synthesized_batch_proportion=1, multi_sequence_size=1, filtering_threshold=0):
+              synthesized_batch_proportion=1, multi_sequence_size=1, filtering_threshold=0, vectorizer_complexity=2,
+              negative_shuffle_ratio=2):
     """
     Executes one epoch of n runs.
     Each run does the experiment on "relative_size" of training samples.
@@ -81,6 +81,9 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
     measure_list_ROCS = []
     measure_list_APRS = []
 
+    # Instantiate the vectorizer.
+    vectorizer = Vectorizer(complexity=vectorizer_complexity)
+
     for epoch in range(experiment_repetitions):
         logger.info('-' * 80)
         logger.info('run %d/%d' % (epoch+1, experiment_repetitions))
@@ -88,24 +91,26 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
         graphs_neg_test, graphs_neg_test_epoch_1, graphs_neg_test_epoch_2 = tee(graphs_neg_test, 3)
 
         # Get a fresh copy of test and train graphs for the new epoch.
-        graphs_pos_train, graphs_pos_train_epoch = tee(graphs_pos_train)
-        graphs_neg_train, graphs_neg_train_epoch = tee(graphs_neg_train)
+        graphs_pos_train, graphs_pos_train_ = tee(graphs_pos_train)
+        graphs_neg_train, graphs_neg_train_ = tee(graphs_neg_train)
 
         # Take n% of test and train graph sets. n is the epoch counter.
-        graphs_pos_train_epoch, iterable_not_used = random_bipartition_iter(graphs_pos_train_epoch, relative_size=relative_size)
+        graphs_pos_train_epoch, iterable_not_used = random_bipartition_iter(graphs_pos_train_, relative_size=relative_size)
 
-        graphs_neg_train_epoch, iterable_not_used = random_bipartition_iter(graphs_neg_train_epoch, relative_size=relative_size)
+        graphs_neg_train_epoch, iterable_not_used = random_bipartition_iter(graphs_neg_train_, relative_size=relative_size)
 
         # Make copies of each for the whole epoch run.
         graphs_pos_train_epoch_1, graphs_pos_train_epoch_2, graphs_pos_train_epoch_3 = tee(graphs_pos_train_epoch, 3)
 
         graphs_neg_train_epoch_1, graphs_neg_train_epoch_2 = tee(graphs_neg_train_epoch)
 
-        # Instantiate the vectorizer.
-        vectorizer = Vectorizer(complexity=2)
-
         # Train TrueSamplesModel classifier.
+        logger.info('Fit estimator on original data')
         estimator = fit(graphs_pos_train_epoch_1, graphs_neg_train_epoch_1, vectorizer, n_jobs=-1, cv=3, n_iter_search=1)
+
+        # Test the test set against TrueSamplesModel -> output performance
+        logger.info('Evaluate estimator:')
+        roc_t, apr_t = estimate(graphs_pos_test_epoch_1, graphs_neg_test_epoch_1, estimator, vectorizer, n_jobs=-1)
 
         # Design the batch of new sequences.
         designed_iterable = produce_batch_RNA(graphs=graphs_pos_train_epoch_2, vectorizer=vectorizer, estimator=estimator, **opts)
@@ -117,22 +122,19 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
         graphs_synthesized = rnafold_to_eden(designed_iterable)
 
         # Produce graph iterator over negative samples for synthesized data.
-        iterable_neg = seq_to_seq(designed_iterable2, modifier=shuffle_modifier, times=3, order=2)
+        iterable_neg = seq_to_seq(designed_iterable2, modifier=shuffle_modifier, times=negative_shuffle_ratio, order=2)
         graphs_neg_synthesized = rnafold_to_eden(iterable_neg)
 
         # Mix the sample with "true sequences".
         graphs_mixed_pos = chain(graphs_pos_train_epoch_3, graphs_synthesized)
         graphs_mixed_neg = chain(graphs_neg_train_epoch_2, graphs_neg_synthesized)
 
+        logger.info('Fit estimator on original + sampled data')
         # Train MixedSamplesModel classifier.
         estimator2 = fit(graphs_mixed_pos, graphs_mixed_neg, vectorizer, n_jobs=-1, cv=3, n_iter_search=1)
 
-        # Test the test set against TrueSamplesModel -> output performance
-        logger.info('Evaluating the True model performance:')
-        roc_t, apr_t = estimate(graphs_pos_test_epoch_1, graphs_neg_test_epoch_1, estimator, vectorizer, n_jobs=-1)
-
         # Test the test set against SynthesizedSamplesModel -> output performance
-        logger.info('Evaluating the mixed model performance:')
+        logger.info('Evaluate estimator:')
         roc_s, apr_s = estimate(graphs_pos_test_epoch_2, graphs_neg_test_epoch_2, estimator2, vectorizer, n_jobs=-1)
 
         # Additional sample counts:
@@ -179,7 +181,7 @@ def compute_learning_curves(params):
 
     iterable_pos = fasta_to_sequence(rfam_url(params['rfam_id']))
     iterable_pos, iterable_pos_ = tee(iterable_pos)
-    iterable_neg = seq_to_seq(iterable_pos_, modifier=shuffle_modifier, times=3, order=2)
+    iterable_neg = seq_to_seq(iterable_pos_, modifier=shuffle_modifier, times=params['negative_shuffle_ratio'], order=2)
 
     # Positive sample graphs.
     graphs_pos = rnafold_to_eden(iterable_pos)
@@ -216,7 +218,9 @@ def compute_learning_curves(params):
                                                              filtering_threshold=params['filtering_threshold'],
                                                              experiment_repetitions=params['experiment_repetitions'],
                                                              relative_size=data_fraction,
-                                                             antaRNA_param_file=params['antaRNA_params'])
+                                                             antaRNA_param_file=params['antaRNA_params'],
+                                                             vectorizer_complexity=params['vectorizer_complexity'],
+                                                             negative_shuffle_ratio=params['negative_shuffle_ratio'])
 
         logger.info('Performance measures for data fraction: %.1f' % data_fraction)
         logger.info('ROC for True samples:')

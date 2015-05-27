@@ -17,6 +17,7 @@ def draw_learning_curve(data_A = None , data_B = None, measure = None, x=None):
 	Accepts as input an iterator over lists of numbers.
 	Draws the exponential decay grpah over the means of lists.
 	"""
+	x=np.array(x)
 	mean_originals = []
 	for originals in data_A:
 		mean_originals.append(mean(np.array(originals)))
