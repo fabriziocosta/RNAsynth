@@ -25,9 +25,9 @@ def rfam_url(family_id):
 
 
 def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
-                      antaRNA_param_file=None, nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
-                      bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
-                      multi_sequence_size=1, filtering_threshold=0):
+                      antaRNA_param_file=None, importance_threshold_sequence_constraint=0, min_size_connected_component_sequence_constraint=1,
+                      importance_threshold_structure_constraint=0, min_size_connected_component_structure_constraint=1, min_size_connected_component_unpaired_structure_constraint=1,
+                      n_synthesized_sequences_per_seed_sequence=1, instance_score_threshold=0):
 
     graphs, graphs_counter = tee(graphs)
 
@@ -37,23 +37,23 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
                                              vectorizer=vectorizer,
                                              design_estimator=estimator,
                                              filter_estimator=estimator,
-                                             nt_importance_threshold=nt_importance_threshold,
-                                             nmin_important_nt_adjaceny=nmin_important_nt_adjaceny,
-                                             bp_importance_threshold=bp_importance_threshold,
-                                             nmin_important_bp_adjaceny=nmin_important_bp_adjaceny,
-                                             nmin_unpaired_nt_adjacency=nmin_unpaired_nt_adjacency,
-                                             multi_sequence_size=multi_sequence_size,
-                                             filtering_threshold=filtering_threshold)
+                                             importance_threshold_sequence_constraint=importance_threshold_sequence_constraint,
+                                             min_size_connected_component_sequence_constraint=min_size_connected_component_sequence_constraint,
+                                             importance_threshold_structure_constraint=importance_threshold_structure_constraint,
+                                             min_size_connected_component_structure_constraint=min_size_connected_component_structure_constraint,
+                                             min_size_connected_component_unpaired_structure_constraint=min_size_connected_component_unpaired_structure_constraint,
+                                             n_synthesized_sequences_per_seed_sequence=n_synthesized_sequences_per_seed_sequence,
+                                             instance_score_threshold=instance_score_threshold)
 
     for i, seq in enumerate(fasta_iterable):
         yield seq
 
 
-def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=None, performance_log_file=None,
+def run_epoch(n_experiment_repetitions=1, relative_size=None, antaRNA_param_file=None, performance_log_file=None,
               graphs_pos_test=None, graphs_neg_test=None, graphs_pos_train=None, graphs_neg_train=None,
-              nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
-              bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
-              multi_sequence_size=1, filtering_threshold=0, vectorizer_complexity=2,
+              importance_threshold_sequence_constraint=0, min_size_connected_component_sequence_constraint=1,
+              importance_threshold_structure_constraint=0, min_size_connected_component_structure_constraint=1, min_size_connected_component_unpaired_structure_constraint=1,
+              n_synthesized_sequences_per_seed_sequence=1, instance_score_threshold=0, vectorizer_complexity=2,
               negative_shuffle_ratio=2):
     """
     Executes one epoch of n runs.
@@ -62,10 +62,11 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
     Also outputs the overall elapsed time on n runs.
     """
 
-    opts = {'nt_importance_threshold': nt_importance_threshold, 'nmin_important_nt_adjaceny': nmin_important_nt_adjaceny,
-            'bp_importance_threshold': bp_importance_threshold, 'nmin_important_bp_adjaceny': nmin_important_bp_adjaceny,
-            'nmin_unpaired_nt_adjacency': nmin_unpaired_nt_adjacency, 'multi_sequence_size': multi_sequence_size,
-            'filtering_threshold': filtering_threshold, 'antaRNA_param_file': antaRNA_param_file}
+    opts = {'importance_threshold_sequence_constraint': importance_threshold_sequence_constraint, 
+			'min_size_connected_component_sequence_constraint': min_size_connected_component_sequence_constraint,
+            'importance_threshold_structure_constraint': importance_threshold_structure_constraint, 'min_size_connected_component_structure_constraint': min_size_connected_component_structure_constraint,
+            'min_size_connected_component_unpaired_structure_constraint': min_size_connected_component_unpaired_structure_constraint, 'n_synthesized_sequences_per_seed_sequence': n_synthesized_sequences_per_seed_sequence,
+            'instance_score_threshold': instance_score_threshold, 'antaRNA_param_file': antaRNA_param_file}
 
     start_time = time.time()
 
@@ -77,9 +78,9 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
     # Instantiate the vectorizer.
     vectorizer = Vectorizer(complexity=vectorizer_complexity)
 
-    for epoch in range(experiment_repetitions):
+    for epoch in range(n_experiment_repetitions):
         logger.info('-' * 80)
-        logger.info('run %d/%d' % (epoch+1, experiment_repetitions))
+        logger.info('run %d/%d' % (epoch+1, n_experiment_repetitions))
         graphs_pos_test, graphs_pos_test_epoch_1, graphs_pos_test_epoch_2 = tee(graphs_pos_test, 3)
         graphs_neg_test, graphs_neg_test_epoch_1, graphs_neg_test_epoch_2 = tee(graphs_neg_test, 3)
 
@@ -151,17 +152,15 @@ def get_args():
     # --log_file is not currently used.
     parser.add_argument('--log_file', '-l', type=str, default='~/Synthesis.log', help='experiment log file')
     parser.add_argument('--antaRNA_params', '-p', type=str, default='./antaRNA.ini', help='antaRNA initialization file')
-    parser.add_argument('--nt_importance_threshold', '-a', type=int, default=0, help='nucleotide selection threshold')
-    parser.add_argument('--nmin_important_nt_adjaceny', '-b', type=int, default=1, help='nucleotide minimum adjacency')
-    parser.add_argument('--bp_importance_threshold', '-c', type=int, default=0, help='basepair selection threshold')
-    parser.add_argument('--nmin_important_bp_adjaceny', '-d', type=int, default=1, help='basepairs minimum adjacency')
-    parser.add_argument('--nmin_unpaired_nt_adjacency', '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
-    parser.add_argument('--multi_sequence_size', '-n', type=int, default=1, help='number of synthesized sequences per constraint')
-    parser.add_argument('--filtering_threshold', '-f', type=int, default=0, help='filtering threshold')
-    # parser.add_argument('--batch_proportion', '-g', type=int, default=1, help='batch to sample size proportion')
-    # parser.add_argument('--epoch_instances', '-k', type=int, default=10)
-    parser.add_argument('--experiment_repetitions', '-j', type=int, default=10, help='runs per experiment')
-    parser.add_argument('--split_ratio', '-r', type=float, default=0.2, help='train-to-test size ratio')
+    parser.add_argument('--importance_threshold_sequence_constraint', '-a', type=int, default=0, help='nucleotide selection threshold')
+    parser.add_argument('--min_size_connected_component_sequence_constraint', '-b', type=int, default=1, help='nucleotide minimum adjacency')
+    parser.add_argument('--importance_threshold_structure_constraint', '-c', type=int, default=0, help='basepair selection threshold')
+    parser.add_argument('--min_size_connected_component_structure_constraint', '-d', type=int, default=1, help='basepairs minimum adjacency')
+    parser.add_argument('--min_size_connected_component_unpaired_structure_constraint', '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
+    parser.add_argument('--n_synthesized_sequences_per_seed_sequence', '-n', type=int, default=1, help='number of synthesized sequences per constraint')
+    parser.add_argument('--instance_score_threshold', '-f', type=int, default=0, help='filtering threshold')
+    parser.add_argument('--n_experiment_repetitions', '-j', type=int, default=10, help='runs per experiment')
+    parser.add_argument('--train_to_test_split_ratio', '-r', type=float, default=0.2, help='train-to-test size ratio')
     args = parser.parse_args()
     return args
 
@@ -181,8 +180,8 @@ def compute_learning_curves(params):
     # Negative sample graphs.
     graphs_neg = rnafold_to_eden(iterable_neg)
     # Split samples to train and test iterables.
-    graphs_pos_train, graphs_pos_test = random_bipartition_iter(graphs_pos, relative_size=params['split_ratio'])
-    graphs_neg_train, graphs_neg_test = random_bipartition_iter(graphs_neg, relative_size=params['split_ratio'])
+    graphs_pos_train, graphs_pos_test = random_bipartition_iter(graphs_pos, relative_size=params['train_to_test_split_ratio'])
+    graphs_neg_train, graphs_neg_test = random_bipartition_iter(graphs_neg, relative_size=params['train_to_test_split_ratio'])
 
     exp_roc_t = []
     exp_roc_s = []
@@ -201,14 +200,14 @@ def compute_learning_curves(params):
                                                              graphs_neg_test=graphs_neg_test_c,
                                                              graphs_pos_train=graphs_pos_train_c,
                                                              graphs_neg_train=graphs_neg_train_c,
-                                                             nt_importance_threshold=params['nt_importance_threshold'],
-                                                             nmin_important_nt_adjaceny=params['nmin_important_nt_adjaceny'],
-                                                             bp_importance_threshold=params['bp_importance_threshold'],
-                                                             nmin_important_bp_adjaceny=params['nmin_important_bp_adjaceny'],
-                                                             nmin_unpaired_nt_adjacency=params['nmin_unpaired_nt_adjacency'],
-                                                             multi_sequence_size=params['multi_sequence_size'],
-                                                             filtering_threshold=params['filtering_threshold'],
-                                                             experiment_repetitions=params['experiment_repetitions'],
+                                                             importance_threshold_sequence_constraint=params['importance_threshold_sequence_constraint'],
+                                                             min_size_connected_component_sequence_constraint=params['min_size_connected_component_sequence_constraint'],
+                                                             importance_threshold_structure_constraint=params['importance_threshold_structure_constraint'],
+                                                             min_size_connected_component_structure_constraint=params['min_size_connected_component_structure_constraint'],
+                                                             min_size_connected_component_unpaired_structure_constraint=params['min_size_connected_component_unpaired_structure_constraint'],
+                                                             n_synthesized_sequences_per_seed_sequence=params['n_synthesized_sequences_per_seed_sequence'],
+                                                             instance_score_threshold=params['instance_score_threshold'],
+                                                             n_experiment_repetitions=params['n_experiment_repetitions'],
                                                              relative_size=data_fraction,
                                                              antaRNA_param_file=params['antaRNA_params'],
                                                              vectorizer_complexity=params['vectorizer_complexity'],

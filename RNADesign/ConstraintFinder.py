@@ -140,27 +140,27 @@ def find_unpaired_regions(g, adjacency):
 	return unpaired_nodes_list
 
 
-def antaRNA_constraint_string(g, threshold, adjacency = 1 , padding= 'N'):
+def antaRNA_constraint_string(g, importance_threshold_sequence_constraint , min_size_connected_component_sequence_constraint = 1 , padding= 'N'):
 	"""
 	Generates the anatRNA input constraint string based on Networkx graph representation.
 	Adjacent nodes above the threshold show up in the output string.
 	"""
 	Cstr_dict = build_nodes_dict(g)
-	for node in get_importance_list(g, threshold, adjacency,importance=-1):
+	for node in get_importance_list(g, importance_threshold_sequence_constraint , min_size_connected_component_sequence_constraint , importance=-1):
 		Cstr_dict[node] = padding
 
 	return dict_to_string(Cstr_dict)
 
 
-def antaRNA_dot_struct(g,threshold, importance_adjacency = 1, unpaired_adjacency = 1):
+def antaRNA_dot_struct(g , importance_threshold_structure_constraint , min_size_connected_component_structure_constraint = 1, min_size_connected_component_unpaired_structure_constraint = 1):
 	"""
 	Generates the anatRNA input dot-bracket notation constraint based on networkx graph representation.
 	Base pairs above the importance threshold appear in the output string.
 	"""
 	list_bpairs = get_basepair_list(g)
-	list_unpaired = find_unpaired_regions(g, unpaired_adjacency)
+	list_unpaired = find_unpaired_regions(g, min_size_connected_component_unpaired_structure_constraint)
 	dic_dot_str = build_generic_nodes_dict(g)
-	importance_list = get_importance_list(g, threshold, importance_adjacency)
+	importance_list = get_importance_list(g , importance_threshold_structure_constraint , min_size_connected_component_structure_constraint)
 	dot_list = []
 	
 	for i,j in list_bpairs:
@@ -173,7 +173,7 @@ def antaRNA_dot_struct(g,threshold, importance_adjacency = 1, unpaired_adjacency
 	return dict_to_string(dic_dot_str)
 
 
-def generate_antaRNA_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_threshold, dotnot_adjacency, unpaired_adjacency):
+def generate_antaRNA_constraints(graphs, importance_threshold_sequence_constraint, min_size_connected_component_sequence_constraint , importance_threshold_structure_constraint , min_size_connected_component_structure_constraint , min_size_connected_component_unpaired_structure_constraint):
 	"""
 	Generator function responsible for composing anatRNA dot-bracket and constraint string.
 	Accepts different threshold and adjacency values for composing anatRNA dot-bracket and constraint string.
@@ -181,8 +181,8 @@ def generate_antaRNA_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_
 	for g in graphs:
 		fasta_id = g.graph['id']
 		gc_content = compute_gc_content(g)
-		Cseq = antaRNA_constraint_string(g, Cseq_threshold, Cseq_adjacency)
-		struct = antaRNA_dot_struct(g,dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
+		Cseq = antaRNA_constraint_string(g, importance_threshold_sequence_constraint, min_size_connected_component_sequence_constraint)
+		struct = antaRNA_dot_struct(g , importance_threshold_structure_constraint , min_size_connected_component_structure_constraint , min_size_connected_component_unpaired_structure_constraint)
 		
 		yield struct,Cseq,gc_content,fasta_id
 

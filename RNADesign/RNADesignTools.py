@@ -37,8 +37,8 @@ def generate_antaRNA_sequence(dot_bracket_constraint_string = None, sequence_con
 
 
 def design_RNA(param_file = None , iterable = None, vectorizer = None, estimator = None, \
-			nt_importance_threshold=0, nmin_important_nt_adjaceny=1, bp_importance_threshold=0, nmin_important_bp_adjaceny=1, \
-			nmin_unpaired_nt_adjacency=1, multi_sequence_size=1):
+			importance_threshold_sequence_constraint=0, min_size_connected_component_sequence_constraint=1, importance_threshold_structure_constraint=0, min_size_connected_component_structure_constraint=1, \
+			min_size_connected_component_unpaired_structure_constraint=1, n_synthesized_sequences_per_seed_sequence=1):
 	"""
 	Function for synthesizing RNA sequences.
 	Takes as input an iterator over networkx graphs and outputs an iterator 
@@ -50,17 +50,17 @@ def design_RNA(param_file = None , iterable = None, vectorizer = None, estimator
 	op = antaParams(param_file)
 
 	iterable = vectorizer.annotate(iterable, estimator=estimator)
-	iterable = cf.generate_antaRNA_constraints(iterable, nt_importance_threshold, nmin_important_nt_adjaceny, \
-											bp_importance_threshold, nmin_important_bp_adjaceny, nmin_unpaired_nt_adjacency)
+	iterable = cf.generate_antaRNA_constraints(iterable, importance_threshold_sequence_constraint, min_size_connected_component_sequence_constraint, \
+											importance_threshold_structure_constraint, min_size_connected_component_structure_constraint, min_size_connected_component_unpaired_structure_constraint)
 	for (dot_bracket,seq_constraint,gc_content,fasta_id)  in iterable:
-		for count in range(multi_sequence_size):
+		for count in range(n_synthesized_sequences_per_seed_sequence):
 			result = generate_antaRNA_sequence(dot_bracket, seq_constraint, gc_content, fasta_id ,op)
 			yield result
 
 
 def filter_sequences(iterable = None, vectorizer = None, estimator = None , threshold = 0):
 	"""
-	Filter. Returns a subset of the iterable with marginal prediction above filtering_threshold.
+	Filter. Returns a subset of the iterable with marginal prediction above instance_score_threshold.
 	Takes as input a list of fasta sequences. Outputs an iterator over a list of eden sequences.
 	"""
 	iterable_sequence, iterable_sequence_for_graphs = tee( iterable )
@@ -72,8 +72,8 @@ def filter_sequences(iterable = None, vectorizer = None, estimator = None , thre
 
 
 def design_filtered_RNA(param_file = None , iterable = None, vectorizer = None, design_estimator = None, filter_estimator = None, \
-			nt_importance_threshold = 0, nmin_important_nt_adjaceny = 1, bp_importance_threshold = 0, nmin_important_bp_adjaceny = 1, \
-			nmin_unpaired_nt_adjacency = 1, multi_sequence_size = 1 , filtering_threshold = 0):
+			importance_threshold_sequence_constraint = 0, min_size_connected_component_sequence_constraint = 1, importance_threshold_structure_constraint = 0, min_size_connected_component_structure_constraint = 1, \
+			min_size_connected_component_unpaired_structure_constraint = 1, n_synthesized_sequences_per_seed_sequence = 1 , instance_score_threshold = 0):
 
 	"""
 	Function for synthesizing RNA sequences.
@@ -83,11 +83,11 @@ def design_filtered_RNA(param_file = None , iterable = None, vectorizer = None, 
 	Returns as output a fasta list.
 	"""
 	iterable = design_RNA(param_file = param_file , iterable = iterable , vectorizer = vectorizer, estimator = design_estimator, \
-			nt_importance_threshold = nt_importance_threshold, nmin_important_nt_adjaceny = nmin_important_nt_adjaceny, \
-			bp_importance_threshold = bp_importance_threshold, nmin_important_bp_adjaceny = nmin_important_bp_adjaceny, \
-			nmin_unpaired_nt_adjacency = nmin_unpaired_nt_adjacency , multi_sequence_size = multi_sequence_size)
+			importance_threshold_sequence_constraint = importance_threshold_sequence_constraint, min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint, \
+			importance_threshold_structure_constraint = importance_threshold_structure_constraint, min_size_connected_component_structure_constraint = min_size_connected_component_structure_constraint, \
+			min_size_connected_component_unpaired_structure_constraint = min_size_connected_component_unpaired_structure_constraint , n_synthesized_sequences_per_seed_sequence = n_synthesized_sequences_per_seed_sequence)
 
-	iterable = filter_sequences(iterable = iterable, vectorizer = vectorizer, estimator = filter_estimator , threshold = filtering_threshold)
+	iterable = filter_sequences(iterable = iterable, vectorizer = vectorizer, estimator = filter_estimator , threshold = instance_score_threshold)
 	return iterable
 
 
@@ -97,8 +97,8 @@ if __name__ == "__main__":
 	logger.info('Call to RNA Design Tools package.')
 	
 	opts={'antaRNA_param_file':'/home/kohvaeip/RNAsynth/lib/antaRNA/antaRNA.ini' , \
-	'nt_importance_threshold':-1.1 , 'nmin_important_nt_adjaceny':1 , 'bp_importance_threshold':-0.85 , \
-	'nmin_important_bp_adjaceny':3 , 'nmin_unpaired_nt_adjacency':3 , 'multi_sequence_size':3, 'filtering_threshold':0}
+	'importance_threshold_sequence_constraint':-1.1 , 'min_size_connected_component_sequence_constraint':1 , 'importance_threshold_structure_constraint':-0.85 , \
+	'min_size_connected_component_structure_constraint':3 , 'min_size_connected_component_unpaired_structure_constraint':3 , 'n_synthesized_sequences_per_seed_sequence':3, 'instance_score_threshold':0}
 	
 	rfam_id = 'RF00005'
 	rfam_url = 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0'%(family_id,family_id) 
