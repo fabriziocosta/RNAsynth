@@ -27,15 +27,10 @@ def rfam_url(family_id):
 def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
                       antaRNA_param_file=None, nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
                       bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
-                      synthesized_batch_proportion=1, multi_sequence_size=1, filtering_threshold=0):
+                      multi_sequence_size=1, filtering_threshold=0):
 
     graphs, graphs_counter = tee(graphs)
 
-    # Calculate the batch size proportional to the size of the epoch's training samples.
-    train_size = 0
-    for graph in graphs_counter:
-        train_size += 1
-    batch_size = train_size * synthesized_batch_proportion
     # Design the batch of new sequences.
     fasta_iterable = rdt.design_filtered_RNA(param_file=antaRNA_param_file,
                                              iterable=graphs,
@@ -51,8 +46,6 @@ def produce_batch_RNA(graphs=None, vectorizer=None, estimator=None,
                                              filtering_threshold=filtering_threshold)
 
     for i, seq in enumerate(fasta_iterable):
-        if i > batch_size * 2:
-            break
         yield seq
 
 
@@ -60,7 +53,7 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
               graphs_pos_test=None, graphs_neg_test=None, graphs_pos_train=None, graphs_neg_train=None,
               nt_importance_threshold=0, nmin_important_nt_adjaceny=1,
               bp_importance_threshold=0, nmin_important_bp_adjaceny=1, nmin_unpaired_nt_adjacency=1,
-              synthesized_batch_proportion=1, multi_sequence_size=1, filtering_threshold=0, vectorizer_complexity=2,
+              multi_sequence_size=1, filtering_threshold=0, vectorizer_complexity=2,
               negative_shuffle_ratio=2):
     """
     Executes one epoch of n runs.
@@ -71,8 +64,8 @@ def run_epoch(experiment_repetitions=1, relative_size=None, antaRNA_param_file=N
 
     opts = {'nt_importance_threshold': nt_importance_threshold, 'nmin_important_nt_adjaceny': nmin_important_nt_adjaceny,
             'bp_importance_threshold': bp_importance_threshold, 'nmin_important_bp_adjaceny': nmin_important_bp_adjaceny,
-            'nmin_unpaired_nt_adjacency': nmin_unpaired_nt_adjacency, 'synthesized_batch_proportion': synthesized_batch_proportion,
-            'multi_sequence_size': multi_sequence_size, 'filtering_threshold': filtering_threshold, 'antaRNA_param_file': antaRNA_param_file}
+            'nmin_unpaired_nt_adjacency': nmin_unpaired_nt_adjacency, 'multi_sequence_size': multi_sequence_size,
+            'filtering_threshold': filtering_threshold, 'antaRNA_param_file': antaRNA_param_file}
 
     start_time = time.time()
 
@@ -154,21 +147,21 @@ def get_args():
     Returns a dictionary.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--rfam_id', '-i', type=str, default='RF00005')
+    parser.add_argument('--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
     # --log_file is not currently used.
-    parser.add_argument('--log_file', '-l', type=str, default='~/Synthesis.log')
-    parser.add_argument('--antaRNA_params', '-p', type=str, default='./antaRNA.ini')
-    parser.add_argument('--nt_importance_threshold', '-a', type=int, default=0)
-    parser.add_argument('--nmin_important_nt_adjaceny', '-b', type=int, default=1)
-    parser.add_argument('--bp_importance_threshold', '-c', type=int, default=0)
-    parser.add_argument('--nmin_important_bp_adjaceny', '-d', type=int, default=1)
-    parser.add_argument('--nmin_unpaired_nt_adjacency', '-e', type=int, default=1)
-    parser.add_argument('--multi_sequence_size', '-n', type=int, default=1)
-    parser.add_argument('--filtering_threshold', '-f', type=int, default=0)
-    parser.add_argument('--batch_proportion', '-g', type=int, default=1)
-    #parser.add_argument('--epoch_instances', '-k', type=int, default=10)
-    parser.add_argument('--experiment_repetitions', '-j', type=int, default=10)
-    parser.add_argument('--split_ratio', '-r', type=float, default=0.2)
+    parser.add_argument('--log_file', '-l', type=str, default='~/Synthesis.log', help='experiment log file')
+    parser.add_argument('--antaRNA_params', '-p', type=str, default='./antaRNA.ini', help='antaRNA initialization file')
+    parser.add_argument('--nt_importance_threshold', '-a', type=int, default=0, help='nucleotide selection threshold')
+    parser.add_argument('--nmin_important_nt_adjaceny', '-b', type=int, default=1, help='nucleotide minimum adjacency')
+    parser.add_argument('--bp_importance_threshold', '-c', type=int, default=0, help='basepair selection threshold')
+    parser.add_argument('--nmin_important_bp_adjaceny', '-d', type=int, default=1, help='basepairs minimum adjacency')
+    parser.add_argument('--nmin_unpaired_nt_adjacency', '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
+    parser.add_argument('--multi_sequence_size', '-n', type=int, default=1, help='number of synthesized sequences per constraint')
+    parser.add_argument('--filtering_threshold', '-f', type=int, default=0, help='filtering threshold')
+    # parser.add_argument('--batch_proportion', '-g', type=int, default=1, help='batch to sample size proportion')
+    # parser.add_argument('--epoch_instances', '-k', type=int, default=10)
+    parser.add_argument('--experiment_repetitions', '-j', type=int, default=10, help='runs per experiment')
+    parser.add_argument('--split_ratio', '-r', type=float, default=0.2, help='train-to-test size ratio')
     args = parser.parse_args()
     return args
 
@@ -213,7 +206,6 @@ def compute_learning_curves(params):
                                                              bp_importance_threshold=params['bp_importance_threshold'],
                                                              nmin_important_bp_adjaceny=params['nmin_important_bp_adjaceny'],
                                                              nmin_unpaired_nt_adjacency=params['nmin_unpaired_nt_adjacency'],
-                                                             synthesized_batch_proportion=params['batch_proportion'],
                                                              multi_sequence_size=params['multi_sequence_size'],
                                                              filtering_threshold=params['filtering_threshold'],
                                                              experiment_repetitions=params['experiment_repetitions'],
