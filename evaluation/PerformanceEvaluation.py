@@ -198,7 +198,7 @@ def compute_learning_curves(params):
 
     for i,data_fraction in enumerate(params["data_fractions"]):
         logger.info('=' * 80)
-        logger.info('Training on data chunk %d/%d (data fraction: %.1f)' % (i,len(params["data_fractions"]),data_fraction))
+        logger.info('Training on data chunk %d/%d (data fraction: %.3f)' % (i,len(params["data_fractions"]),data_fraction))
         graphs_pos_train, graphs_pos_train_c = tee(graphs_pos_train)
         graphs_pos_test, graphs_pos_test_c = tee(graphs_pos_test)
         graphs_neg_train, graphs_neg_train_c = tee(graphs_neg_train)
@@ -222,7 +222,7 @@ def compute_learning_curves(params):
                                                              vectorizer_complexity=params['vectorizer_complexity'],
                                                              negative_shuffle_ratio=params['negative_shuffle_ratio'])
 
-        logger.info('Performance measures for data fraction: %.1f' % data_fraction)
+        logger.info('Performance measures for data fraction: %.3f' % data_fraction)
         logger.info('ROC for True samples:')
         logger.info('%s' % mroct)
         logger.info('ROC for Mixed samples:')

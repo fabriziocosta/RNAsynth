@@ -12,7 +12,7 @@ from numpy import exp
 def learning_curve_function(x, a, b):
 	return a * (1 - np.exp(-b * x))
 
-def draw_learning_curve(data_A = None , data_B = None, measure = None, x=None):
+def draw_learning_curve(data_A = None , data_B = None, measure = None, x=None, delta=0.1, scaling=100, fname=None):
 	"""
 	Accepts as input an iterator over lists of numbers.
 	Draws the exponential decay grpah over the means of lists.
@@ -35,24 +35,26 @@ def draw_learning_curve(data_A = None , data_B = None, measure = None, x=None):
 
 	fig, ax1 = plt.subplots(figsize=(10,6))
 	fig.canvas.set_window_title('Exponential Decay Learning Curves')
-	plt.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
+	#plt.subplots_adjust(left=0.04, right=0.35, top=0.9, bottom=0.25)
 
 	ax1.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
 	ax1.set_title('Learning Curve Comparison for %s' %measure)
 	ax1.set_xlabel('Dataset Percentage Used for Training')
 	ax1.set_ylabel('%s Value' %measure)
 	
-	delta=0.25
-	plt.boxplot(data_A,positions=x-delta)
-	plt.plot(x, mean_originals, 'ro', label='')
-	plt.plot(x_fit, mean_originals_fit, 'r-', label='True Samples')
+	plt.boxplot(data_A, positions=(x+delta)*scaling, notch=False)
+	plt.plot((x+delta)*scaling, mean_originals, 'ro', label='')
+	plt.plot((x_fit)*scaling, mean_originals_fit, 'r-', label='Original')
 
-	plt.boxplot(data_B,positions=x+delta)
-	plt.plot(x, mean_originals_and_samples, 'go', label='')
-	plt.plot(x_fit, mean_originals_and_samples_fit, 'g-', label='Mixed Samples')
+	plt.boxplot(data_B, positions=(x-delta)*scaling, notch=False)
+	plt.plot((x-delta)*scaling, mean_originals_and_samples, 'go', label='')
+	plt.plot((x_fit)*scaling, mean_originals_and_samples_fit, 'g-', label='Original+sampled')
 	plt.grid()
 	plt.legend(loc = 'lower right')
-	plt.show()
+	if fname is not None:
+		plt.savefig(fname)
+	else:
+		plt.show()
 
 
 if __name__ == "__main__":
