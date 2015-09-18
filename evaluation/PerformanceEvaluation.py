@@ -1,67 +1,31 @@
 #!/usr/bin/env python
 
-from itertools import chain
-from itertools import tee
+import argparse
+import logging
 import time
 import sys
+from itertools import chain
+from itertools import tee
+
 from eden.util import fit
 from eden.util import estimate
 from eden.graph import Vectorizer
 from eden.converter.fasta import fasta_to_sequence
 from eden.converter.rna.rnafold import rnafold_to_eden
-from eden.util import random_bipartition_iter
 from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
 from eden.util import random_bipartition_iter
-from RNADesign.RNAsynthesizer import RNASynth
 
-import argparse
-import logging
+from rna_design.rna_synthesizer import RNASynth
+
+from util.dataset import rfam_url
+from util.dataset import binary_classification_dataset_setup
+from util.dataset import split_to_train_and_test
+from util.dataset import generate_negatives_and_evaluate
+from util.dataset import generate_negatives_and_fit
 
 
 logger = logging.getLogger(__name__)
-
-
-def rfam_url(family_id):
-    return 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (family_id, family_id)
-
-
-def split_to_train_and_test(rfam_id = None , train_to_test_split_ratio = None):
-	"""DOCUMENTATION"""
-	iterable = fasta_to_sequence(rfam_url(rfam_id))
-	train, test = random_bipartition_iter(iterable, relative_size = train_to_test_split_ratio)
-	return train, test
-
-
-def binary_classification_dataset_setup(iterable = None, negative_shuffle_ratio = None, shuffle_order = None):
-	"""
-	DOCUMENTATION
-	"""
-	iter1, iter2 = tee(iterable)
-	iterable = rnafold_to_eden(iter1)
-	iter3 = seq_to_seq(iter2, modifier = shuffle_modifier, times = negative_shuffle_ratio, order = shuffle_order)
-	iterable_neg = rnafold_to_eden(iter3)
-	return iterable, iterable_neg
-
-
-def generate_negatives_and_evaluate(iterable = None , estimator = None, negative_shuffle_ratio = None, shuffle_order = None):
-	"""
-	DOCUMENTATION
-	"""
-	vectorizer = Vectorizer(complexity=vectorizer_complexity)
-	iterable, iterable_neg = binary_classification_dataset_setup(iterable = iterable, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
-	roc, apr =  estimate(iterable, iterable_neg, estimator, vectorizer, n_jobs=-1)
-	return roc, apr
-
-	
-def generate_negatives_and_fit(iterable = None, negative_shuffle_ratio = None, shuffle_order = None, vectorizer_complexity = None):
-	"""
-	DOCUMENTATION
-	"""
-	vectorizer = Vectorizer(complexity=vectorizer_complexity)
-	iterable, iterable_neg = binary_classification_dataset_setup(iterable = iterable, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
-	model = fit(iterable , iterable_neg , vectorizer , n_jobs=-1 , cv=3 , n_iter_search=1)
-	return model
 
 
 def learning_curve(params, iter_train = None, iter_test = None, relative_size=None):

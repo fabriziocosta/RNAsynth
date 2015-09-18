@@ -1,14 +1,15 @@
-#!/usr/bin/env python
-
 #sys
 
 #libr
 
 #local
 
+import os
+import sys
 from itertools import tee
 from itertools import izip
 import logging
+import argparse
 
 from sklearn.linear_model import SGDClassifier
 
@@ -22,22 +23,53 @@ from eden.graph import Vectorizer
 
 from antaRNA.antaParams import antaParams
 from antaRNA import antaRNA_v109
-from RNADesign import constraint_extractor as ce
+from rna_design import constraint_extractor as ce
 
 from util.dataset import rfam_url
 from util.dataset import binary_classification_dataset_setup
 
 
+import ConfigParser
+
+
 logger = logging.getLogger(__name__)
 
 
-def pre_process(iterable_seq, **opts):
+def get_args():
 	"""
-	DOCUMENTATION
+	Function for manipulating command-line args.
+	Returns a dictionary.
 	"""
-	graphs = rnashapes_to_eden(seqs, shape_type=5, energy_range=35, max_num=opts['max_num'], split_components=True)
-	return graphs 
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--tGC', '-tgc', type=float, default=0.5, help='')
+	parser.add_argument('--colonies', '-c', type=int, default=10, help='')
+	parser.add_argument('--name', '-n', type=str, default='antaRNA_', help='')
+	parser.add_argument('--alpha', '-a', type=float, default=1.0, help='')
+	parser.add_argument('--beta', '-b', type=float, default=1.0, help='')
+	parser.add_argument('--evaporation_rate', '-e', type=float, default=0.2, help='')
+	parser.add_argument('--struct_correction_term', '-sct', type=float, default=0.5, help='')
+	parser.add_argument('--GC_correction_term', '-gct', type=float, default=5.0, help='')
+	parser.add_argument('--seq_correction_term', '-qct', type=float, default=1.0, help='')
+	parser.add_argument('--degreeOfSequenceInducement', '-dsi', type=int, default=1, help='')
+	parser.add_argument('--file_id', '-f', type=str, default='STDOUT', help='')
+	parser.add_argument('--verbose', '-v', type=bool, default=False, help='')
+	parser.add_argument('--output_verbose', '-o', type=bool, default=False, help='')
+	parser.add_argument('--tGCmax', '-tgm', type=float, default=-1.0, help='')
+	parser.add_argument('--tGCvar', '-tgv', type=float, default=-1.0, help='')
+	parser.add_argument('--termination_convergence', '-t', type=int, default=50, help='')
+	parser.add_argument('--convergence_count', '-co', type=int, default=130, help='')
+	parser.add_argument('--reset_limit', '-r', type=int, default=5, help='')
+	parser.add_argument('--improve', '-i', type=str, default='s', help='')
+	parser.add_argument('--temperature', '-tm', type=float, default=37.0, help='')
+	parser.add_argument('--paramFile', '-p', type=str, default='', help='')
+	parser.add_argument('--return_mod', '-rm', type=bool, default=True, help='')
+	parser.add_argument('--seed', '-s', type=str, default='none', help='')
+	
+	args = parser.parse_args()
+	return args
 
+
+###############################################################################################################################################
 
 def generate_antaRNA_sequence(dot_bracket_constraint_string = None, 
 							  sequence_constraint_string = None,
@@ -51,7 +83,7 @@ def generate_antaRNA_sequence(dot_bracket_constraint_string = None,
 	return header,sequence
 
 
-class RNASynth(object):
+class RNADesign(object):
 		
 	def __init__(self, params,  estimator = SGDClassifier(), vectorizer = Vectorizer(), pre_processor = pre_process):
 		
@@ -157,22 +189,8 @@ class RNASynth(object):
 	Returns as output a fasta list.
 	"""
 
-	
+
 if __name__ == "__main__":
 
 	logging.basicConfig(level=logging.INFO)
-	logger.info('Call to RNASynthesizer module.')
-	
-	params = {'antaRNA_params':'./antaRNA.ini', 'importance_threshold_sequence_constraint':0, 
-		  'min_size_connected_component_sequence_constraint':1, 'importance_threshold_structure_constraint':0,
-		  'min_size_connected_component_structure_constraint':1, 'min_size_connected_component_unpaired_structure_constraint':1,
-		  'n_synthesized_sequences_per_seed_sequence':2, 'instance_score_threshold':0,
-		  'train_to_test_split_ratio':.2, 'shuffle_order':2, 'negative_shuffle_ratio':2,
-		  'vectorizer_complexity':2, 'max_num_graphs_per_seq':3}
-
-	rfam_id = 'RF01685'
-	iterable_seq = fasta_to_sequence('http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
-	synthesizer = RNASynth(params)
-	iter_seq = synthesizer.sample(iterable_seq)
-	for item in iter_seq:
-		print item
+	logger.info('Call to rna_desiner module.')
