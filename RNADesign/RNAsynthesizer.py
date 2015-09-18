@@ -22,11 +22,10 @@ from eden.graph import Vectorizer
 
 from antaRNA.antaParams import antaParams
 from antaRNA import antaRNA_v109
-from RNADesign import ConstraintFinder as cf
+from RNADesign import constraint_extractor as ce
 
-
-def rfam_url(family_id):
-	return 'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (family_id, family_id)
+from util.dataset import rfam_url
+from util.dataset import binary_classification_dataset_setup
 
 
 logger = logging.getLogger(__name__)
@@ -50,17 +49,6 @@ def generate_antaRNA_sequence(dot_bracket_constraint_string = None,
 	header = original_header + '_' + str(index)
 	sequence = result.split("\n")[2]
 	return header,sequence
-
-
-def binary_classification_dataset_setup(iterable_seq = None, negative_shuffle_ratio = None, shuffle_order = None):
-	"""
-	DOCUMENTATION
-	"""
-	iter1, iter2 = tee(iterable_seq)
-	iterable_graph = rnafold_to_eden(iter1)
-	iter3 = seq_to_seq(iter2, modifier = shuffle_modifier, times = negative_shuffle_ratio, order = shuffle_order)
-	iterable_graph_neg = rnafold_to_eden(iter3)
-	return iterable_graph, iterable_graph_neg
 
 
 class RNASynth(object):
@@ -103,7 +91,7 @@ class RNASynth(object):
 		DOCUMENTATION
 		"""
 		iterable_graph = self.vectorizer.annotate(iterable_graph, estimator = self.estimator)
-		iterable = cf.generate_antaRNA_constraints(iterable_graph, self._importance_threshold_sequence_constraint, 
+		iterable = ce.generate_antaRNA_constraints(iterable_graph, self._importance_threshold_sequence_constraint, 
 												   self._min_size_connected_component_sequence_constraint,
 												   self._importance_threshold_structure_constraint, 
 												   self._min_size_connected_component_structure_constraint, 
