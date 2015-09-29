@@ -20,9 +20,8 @@ from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
 from eden.graph import Vectorizer
 
-from antaRNA.antaParams import antaParams
-from antaRNA import antaRNA_v109
 from rna_design import constraint_extractor as ce
+from rna_designer import RNADesign
 
 from util.dataset import rfam_url
 from util.dataset import binary_classification_dataset_setup
@@ -39,23 +38,12 @@ def pre_process(iterable_seq, **opts):
 	return graphs 
 
 
-def generate_antaRNA_sequence(dot_bracket_constraint_string = None, 
-							  sequence_constraint_string = None,
-							  gc_content = None, 
-							  original_header = None,
-							  index = None, 
-							  antaParams = None):
-	result = ', '.join(antaRNA_v109.findSequence(dot_bracket_constraint_string,sequence_constraint_string,gc_content,**antaParams.to_dict()))
-	header = original_header + '_' + str(index)
-	sequence = result.split("\n")[2]
-	return header,sequence
-
-
 class RNASynth(object):
 		
-	def __init__(self, params,  estimator = SGDClassifier(), vectorizer = Vectorizer(), pre_processor = pre_process):
-		
-		self._antaRNA_param_file = params['antaRNA_params']
+	def __init__(self, params,  estimator = SGDClassifier(), vectorizer = Vectorizer(), designer = RNADesign(), pre_processor = pre_process):
+		"""
+		DOCUMENTATION
+		"""
 		self._importance_threshold_sequence_constraint = params['importance_threshold_sequence_constraint']
 		self._min_size_connected_component_sequence_constraint = params['min_size_connected_component_sequence_constraint']
 		self._importance_threshold_structure_constraint = params['importance_threshold_structure_constraint']
@@ -71,10 +59,9 @@ class RNASynth(object):
 		
 		self.estimator = estimator
 		self.vectorizer = vectorizer
+		self.designer = designer
 		self.pre_processor = pre_processor
 		
-		assert self._antaRNA_param_file is not None, 'ERROR: empty param_file'
-		self._antaParams = antaParams(self._antaRNA_param_file)
 		logger.info('Instantiated an RNASynthesizer object.')
 		
 	def __fit(self, iterable_seq):
@@ -91,16 +78,16 @@ class RNASynth(object):
 		DOCUMENTATION
 		"""
 		iterable_graph = self.vectorizer.annotate(iterable_graph, estimator = self.estimator)
-		iterable = ce.generate_antaRNA_constraints(iterable_graph, self._importance_threshold_sequence_constraint, 
+		iterable = ce.extract_constraints(iterable_graph, self._importance_threshold_sequence_constraint, 
 												   self._min_size_connected_component_sequence_constraint,
 												   self._importance_threshold_structure_constraint, 
 												   self._min_size_connected_component_structure_constraint, 
 												   self._min_size_connected_component_unpaired_structure_constraint)
 		for (dot_bracket,seq_constraint,gc_content,fasta_id)  in iterable:
 			for count in range(self._n_synthesized_sequences_per_seed_sequence):
-				result = generate_antaRNA_sequence(dot_bracket, seq_constraint, gc_content, fasta_id , count, self._antaParams)
-				#result = self.designer.design(dot_bracket, seq_constraint, gc_content, fasta_id , count, self._antaParams)
-				yield result
+				sequence = self.designer.design(dot_bracket, seq_constraint)
+				header = fasta_id + '_' + str(count)
+				yield header, sequence
 
 	def __filter(self, iterable_seq):
 		"""
@@ -131,7 +118,6 @@ class RNASynth(object):
 	Synthesize RNA sequences given ..
 
 	Args:
-		antaRNA_params: parameter setting file for antaRNA wrappper.
 		importance_threshold_sequence_constraint: classification score threshold for identifying important nucleotides in a sequence.
 		min_size_connected_component_sequence_constraint: minimum number of adjacent important nucleotides which can form a sequence constraint.
 		importance_threshold_structure_constraint: classification score threshold for labeling important basepairs in a secondary structure.
@@ -163,7 +149,7 @@ if __name__ == "__main__":
 	logging.basicConfig(level=logging.INFO)
 	logger.info('Call to RNASynthesizer module.')
 	
-	params = {'antaRNA_params':'./antaRNA.ini', 'importance_threshold_sequence_constraint':0, 
+	params = {'importance_threshold_sequence_constraint':0, 
 		  'min_size_connected_component_sequence_constraint':1, 'importance_threshold_structure_constraint':0,
 		  'min_size_connected_component_structure_constraint':1, 'min_size_connected_component_unpaired_structure_constraint':1,
 		  'n_synthesized_sequences_per_seed_sequence':2, 'instance_score_threshold':0,

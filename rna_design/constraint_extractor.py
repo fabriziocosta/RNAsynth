@@ -138,7 +138,7 @@ def find_unpaired_regions(g, adjacency):
 	return unpaired_nodes_list
 
 
-def antaRNA_constraint_string(g, threshold, adjacency = 1 , padding= 'N'):
+def extract_constraint_string(g, threshold, adjacency = 1 , padding= 'N'):
 	"""
 	Generates the anatRNA input constraint string based on Networkx graph representation.
 	Adjacent nodes above the threshold show up in the output string.
@@ -150,7 +150,7 @@ def antaRNA_constraint_string(g, threshold, adjacency = 1 , padding= 'N'):
 	return dict_to_string(Cstr_dict)
 
 
-def antaRNA_dot_struct(g,threshold, importance_adjacency = 1, unpaired_adjacency = 1):
+def extract_dot_struct(g,threshold, importance_adjacency = 1, unpaired_adjacency = 1):
 	"""
 	Generates the anatRNA input dot-bracket notation constraint based on networkx graph representation.
 	Base pairs above the importance threshold appear in the output string.
@@ -171,7 +171,7 @@ def antaRNA_dot_struct(g,threshold, importance_adjacency = 1, unpaired_adjacency
 	return dict_to_string(dic_dot_str)
 
 
-def generate_antaRNA_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_threshold, dotnot_adjacency, unpaired_adjacency):
+def extract_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_threshold, dotnot_adjacency, unpaired_adjacency):
 	"""
 	Generator function responsible for composing anatRNA dot-bracket and constraint string.
 	Accepts different threshold and adjacency values for composing anatRNA dot-bracket and constraint string.
@@ -179,8 +179,8 @@ def generate_antaRNA_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_
 	for g in graphs:
 		fasta_id = g.graph['id']
 		gc_content = compute_gc_content(g)
-		Cseq = antaRNA_constraint_string(g, Cseq_threshold, Cseq_adjacency)
-		struct = antaRNA_dot_struct(g,dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
+		Cseq = extract_constraint_string(g, Cseq_threshold, Cseq_adjacency)
+		struct = extract_dot_struct(g,dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
 		
 		yield struct,Cseq,gc_content,fasta_id
 
@@ -189,4 +189,4 @@ if __name__ == "__main__":
 
 	logging.basicConfig(level=logging.INFO)
 	logger = logging.getLogger(__name__)
-	logger.info('Call to ConstraintFinder package.')
+	logger.info('Call to constraint_extractor package.')
