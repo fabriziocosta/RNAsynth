@@ -56,3 +56,13 @@ def generate_negatives_and_fit(iterable = None, negative_shuffle_ratio = None, s
 	iterable, iterable_neg = binary_classification_dataset_setup(iterable = iterable, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
 	model = fit(iterable , iterable_neg , vectorizer , n_jobs=-1 , cv=3 , n_iter_search=1)
 	return model
+
+
+def fit_evaluate(iterable_train = None , iterable_test = None, negative_shuffle_ratio = None, shuffle_order = None, vectorizer_complexity = None):
+	"""
+	DOCUMENTATION
+	"""
+	estimator = generate_negatives_and_fit(iterable = iterable_train, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
+	roc, apr = generate_negatives_and_evaluate(iterable = iterable_test , estimator = estimator, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
+	return roc, apr
+	

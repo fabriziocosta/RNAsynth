@@ -21,29 +21,17 @@ from rna_design.rna_synthesizer import RNASynth
 from util.dataset import rfam_url
 from util.dataset import binary_classification_dataset_setup
 from util.dataset import split_to_train_and_test
-from util.dataset import generate_negatives_and_evaluate
-from util.dataset import generate_negatives_and_fit
+from util.dataset import fit_evaluate
 
 
 logger = logging.getLogger(__name__)
 
 
-########################################################################
-def performance_evaluation(params, iter_train = None, iter_test = None, relative_size = None):
+def batch_performance_evaluation(params, iter_train = None, iter_test = None, relative_size = None):
     """
     DOCUMENTATION
-    
-    Executes one epoch of n runs.
-    Each run does the experiment on "relative_size" of training samples.
-    Outputs four lists containing the overall ROC and APR performance measures for true and mixed training samples.
-    Also outputs the overall elapsed time on n runs.
     """
-	
-    log_file = params['log_file']
     n_experiment_repetitions = params['n_experiment_repetitions']
-    shuffle_order = params['shuffle_order']
-    negative_shuffle_ratio = params['negative_shuffle_ratio']
-    vectorizer_complexity = params['vectorizer_complexity']
 
     start_time = time.time()
 
@@ -51,7 +39,6 @@ def performance_evaluation(params, iter_train = None, iter_test = None, relative
     e_apr_t = []
     e_roc_s = []
     e_apr_s = []
-
 
     for epoch in range(n_experiment_repetitions):
         logger.info('-' * 80)
@@ -65,40 +52,7 @@ def performance_evaluation(params, iter_train = None, iter_test = None, relative
         iter_train_ , x = random_bipartition_iter(iter_train_, relative_size=relative_size)
         iter_test_ , x = random_bipartition_iter(iter_test_, relative_size=relative_size)
         
-        # train iterable used for sequence synthesis and producing mixed samples set.
-        iter_train_, iter_train_syn, iter_true = tee(iter_train_, 3)
-        
-        # test iterable used for evaluation.
-        iter_test_, iter_test__ = tee(iter_test_)
-        
-        # Train TrueSamplesModel classifier.
-        logger.info('Fit estimator on original data')
-        estimator_true = generate_negatives_and_fit(iterable = iter_train_, negative_shuffle_ratio = negative_shuffle_ratio,
-											   shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
-        
-        # evaluate the true samples model -> output ROC and APR performance measures
-        logger.info('Evaluate true samples estimator:')
-        roc_t, apr_t = generate_negatives_and_evaluate(iterable = iter_test_ , estimator = estimator_true,
-													   negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
-
-        # Create an RNASynth object.
-        synthesizer = RNASynth(params)
-        
-        # Produce synthesied sequences generator.
-        iterable_seq_syn = synthesizer.sample(iterable_seq = iter_train_syn)
-        
-        # Mix synthesized and true samples.
-        iterable_seq_mixed = chain(iterable_seq_syn, iter_seq_true)
-
-        logger.info('Fit estimator on original + sampled data')
-        # Train MixedSamplesModel classifier.
-        estimator_mixed = generate_negatives_and_fit(iterable = iterable_seq_mixed, negative_shuffle_ratio = negative_shuffle_ratio,
-													 shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
-
-        # evaluate the mixed samples model -> output ROC and APR performance measures
-        logger.info('Evaluate mixed samples estimator:')
-        roc_s, apr_s = generate_negatives_and_evaluate(iterable = iter_test__ , estimator = estimator_mixed,
-													   negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
+        roc_t, apr_t, roc_s, apr_s = performance_evaluation(params, iter_train = iter_train_, iter_test = iter_test_)
         
         # Update experiment performance measures:
         e_roc_t.append(roc_t)
@@ -109,11 +63,12 @@ def performance_evaluation(params, iter_train = None, iter_test = None, relative
     elapsed_time = time.time() - start_time
 
     return e_roc_t, e_apr_t, e_roc_s, e_apr_s, elapsed_time
-    
-    
-"""
+
+
 def performance_evaluation(params, iter_train = None, iter_test = None):
-	
+	"""
+    DOCUMENTATION
+    """
     shuffle_order = params['shuffle_order']
     negative_shuffle_ratio = params['negative_shuffle_ratio']
     vectorizer_complexity = params['vectorizer_complexity']
@@ -124,16 +79,11 @@ def performance_evaluation(params, iter_train = None, iter_test = None):
 	# Copy test sample iterable used for evaluation.
 	iter_test, iter_test_ = tee(iter_test)
 	
-	# Train TrueSamplesModel classifier.
-	logger.info('Fit estimator on original data')
-	estimator_true = generate_negatives_and_fit(iterable = iter_train, negative_shuffle_ratio = negative_shuffle_ratio,
-										   shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
+	# Train TrueSamplesModel classifier. Evaluate.
+	logger.debug('Fit estimator on original data and evaluate the estimator.')
+	roc_t, apr_t = fit_evaluate(iterable_train = iter_train , iterable_test = iter_test, negative_shuffle_ratio = negative_shuffle_ratio, 
+							   shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
 	
-	# evaluate the true samples model -> output ROC and APR performance measures
-	logger.info('Evaluate true samples estimator:')
-	roc_t, apr_t = generate_negatives_and_evaluate(iterable = iter_test , estimator = estimator_true,
-												   negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
-
 	# Create an RNASynth object.
 	synthesizer = RNASynth(params)
 	
@@ -142,25 +92,18 @@ def performance_evaluation(params, iter_train = None, iter_test = None):
 	
 	# Mix synthesized and true samples.
 	iterable_seq_mixed = chain(iterable_seq_syn, iter_seq_true)
-
-	logger.info('Fit estimator on original + sampled data')
-	# Train MixedSamplesModel classifier.
-	estimator_mixed = generate_negatives_and_fit(iterable = iterable_seq_mixed, negative_shuffle_ratio = negative_shuffle_ratio,
-												 shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
-
-	# evaluate the mixed samples model -> output ROC and APR performance measures
-	logger.info('Evaluate mixed samples estimator:')
-	roc_s, apr_s = generate_negatives_and_evaluate(iterable = iter_test_ , estimator = estimator_mixed,
-												   negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
 	
-    return roc_t, apr_t, roc_s, apr_s
-"""
-########################################################################
+	# Train MixedSamplesModel classifier. Evaluate.
+	logger.debug('Fit estimator on original + sampled data and evaluate the estimator.')
+	roc_t, apr_t = fit_evaluate(iterable_train = iterable_seq_mixed , iterable_test = iter_test_, negative_shuffle_ratio = negative_shuffle_ratio,
+				shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
+
+    return roc_t, apr_t, roc_s, apr_s	
+
 
 def get_args():
-    """
-    Function for manipulating command-line args.
-    Returns a dictionary.
+	"""
+    DOCUMENTATION
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
@@ -184,11 +127,9 @@ def get_args():
 
 
 def learning_curve(params):
+	"""
+    DOCUMENTATION
     """
-    Main body of RNASynthesis experiment.
-    """
-    
-    # Experiment parameters
     rfam_id = params['rfam_id']
     log_file = params['log_file']
     train_to_test_split_ratio = params['train_to_test_split_ratio']
@@ -202,7 +143,6 @@ def learning_curve(params):
     roc_s = []
     apr_t = []
     apr_s = []
-
 
     for i,data_fraction in enumerate(data_fractions):
         logger.info('=' * 80)
@@ -231,12 +171,8 @@ def learning_curve(params):
 
 
 if __name__ == "__main__":
-    """
-    Main body of the experiment.
-    Runs on a specific rfam family.
-    Starts from a portion of the training samples and increases the portion per iteration.
-    Runs an epoch on each portion.
-    Saves the results in individual files labeld with the portion.
+	"""
+    DOCUMENTATION
     """
     logging.basicConfig(level=logging.INFO)
     logger.info('Call to performance_evaluation module.')

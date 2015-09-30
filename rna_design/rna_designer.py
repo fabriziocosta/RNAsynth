@@ -5,7 +5,6 @@ import argparse
 
 from lib.antaRNA import antaRNA_v109
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -59,9 +58,10 @@ class RNADesign(object):
 		result = ', '.join(antaRNA_v109.findSequence(dot_bracket_constraint_string, sequence_constraint_string, **self._antaParams))
 		sequence = result.split("\n")[2]
 		return sequence
-	
+
+
 """
-Synthesize RNA sequences given ..
+Explanations
 
 Args:
 	antaRNA_params: parameter setting file for antaRNA wrappper.
@@ -78,16 +78,6 @@ Args:
 	negative_shuffle_ratio: number of negative sample sequences generated for each positive sample.
 	vectorizer_complexity: eden.graph.Vectorizer parameter.
 	max_num_graphs_per_seq: eden.converter.rna.rnashapes.rnashapes_to_eden parameter.
-
-....
-
-Returns:
-	descibe
-
-Takes as input an iterator over networkx graphs and outputs an iterator 
-over fasta-seq,original-fasta-id pairs.
-Uses antaRNA for sequence synthesis and EDeN for annotating networkx graphs.
-Returns as output a fasta list.
 """
 
 
