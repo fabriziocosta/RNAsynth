@@ -39,53 +39,98 @@ def pre_process(iterable_seq, **opts):
 
 
 class RNASynth(object):
-		"""Short one line.
-		
-		Larger. 
-		Multi-line.
-		
-		Parameters
-		----------
-		importance_threshold_sequence_constraint : int (default 1)
-			The threshold to accept ...
-		
-		
-		min_size_connected_component_sequence_constraint : int (default 3)
-			The minimum size of ...
-			
-		"""		
-		
-	def __init__(self, 
-		#params,  
-		estimator=SGDClassifier(),
-		vectorizer=Vectorizer(),
-		designer=RNADesign(),
-		pre_processor=pre_process,
-		importance_threshold_sequence_constraint=1,
-		min_size_connected_component_sequence_constraint=3
-		):
+	"""Short one line.
+
+	Larger. 
+	Multi-line.
+
+	Parameters
+	----------
+	importance_threshold_sequence_constraint : int (default 1)
+		Classification score threshold for identifying important nucleotides in a sequence.
+
+
+	min_size_connected_component_sequence_constraint : int (default 3)
+		Minimum number of adjacent important nucleotides which can form a sequence constraint.
+
+
+	importance_threshold_structure_constraint : int (default 0)	
+		Classification score threshold for labeling important basepairs in a secondary structure.
+
+
+	min_size_connected_component_structure_constraint : int (default 1)
+		Minimum number of adjacent basepairs which can form a secondary structure constraint.
+
+
+	min_size_connected_component_unpaired_structure_constraint : int (default 1)
+		Minimum number of adjacent backbones which can form a secondary structure constraint.
+
+
+	n_synthesized_sequences_per_seed_sequence : int (default 2)
+		Option for setting the number of synthesized sequences per constraint.
+
+
+	instance_score_threshold : int (default 0)
+		Predicted score threshold for filtering synthesized sequences.
+
+
+	train_to_test_split_ratio : float (default 0.2)
+		Ratio for splitting the sample dataset into train and test datasets.
+
+
+	shuffle_order : int (default 2)
+		Eden.modifier.seq.seq_to_seq parameter.
+
+
+	negative_shuffle_ratio : int (default 2)
+		Number of negative sample sequences generated for each positive sample.
+
+
+	vectorizer_complexity : int (default 2)
+		eden.graph.Vectorizer parameter.
+
+
+	max_num_graphs_per_seq: int (default 3)
+		eden.converter.rna.rnashapes.rnashapes_to_eden parameter.
+	"""		
+
+	def __init__(self,
+				 estimator=SGDClassifier(),
+				 vectorizer=Vectorizer(),
+				 designer=RNADesign(),
+				 pre_processor=pre_process,
+				 importance_threshold_sequence_constraint=0,
+				 min_size_connected_component_sequence_constraint=1,
+				 importance_threshold_structure_constraint=0,
+				 min_size_connected_component_structure_constraint=1,
+				 min_size_connected_component_unpaired_structure_constraint=1,
+				 n_synthesized_sequences_per_seed_sequence=2,
+				 instance_score_threshold=0,
+				 train_to_test_split_ratio=0.2,
+				 shuffle_order=2,
+				 negative_shuffle_ratio=2,
+				 vectorizer_complexity=2,
+				 max_num_graphs_per_seq=3
+				):
 
 		self.estimator = estimator
 		self.vectorizer = vectorizer
 		self.designer = designer
 		self.pre_processor = pre_processor
 		
-		self.importance_threshold_sequence_constraint = importance_threshold_sequence_constraint 
-
-#...
-		self._importance_threshold_sequence_constraint = params['importance_threshold_sequence_constraint']
-		self._min_size_connected_component_sequence_constraint = params['min_size_connected_component_sequence_constraint']
-		self._importance_threshold_structure_constraint = params['importance_threshold_structure_constraint']
-		self._min_size_connected_component_structure_constraint = params['min_size_connected_component_structure_constraint']
-		self._min_size_connected_component_unpaired_structure_constraint = params['min_size_connected_component_unpaired_structure_constraint']
-		self._n_synthesized_sequences_per_seed_sequence = params['n_synthesized_sequences_per_seed_sequence']
-		self._instance_score_threshold = params['instance_score_threshold']
-		self._train_to_test_split_ratio = params['train_to_test_split_ratio']
-		self._shuffle_order = params['shuffle_order']
-		self._negative_shuffle_ratio = params['negative_shuffle_ratio']
-		self._vectorizer_complexity = params['vectorizer_complexity']
-		self._max_num_graphs_per_seq = params['max_num_graphs_per_seq']
-		
+		self.importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
+		self._importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
+		self._min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint
+		self._importance_threshold_structure_constraint = importance_threshold_structure_constraint
+		self._min_size_connected_component_structure_constraint = min_size_connected_component_structure_constraint
+		self._min_size_connected_component_unpaired_structure_constraint = min_size_connected_component_unpaired_structure_constraint
+		self._n_synthesized_sequences_per_seed_sequence = n_synthesized_sequences_per_seed_sequence
+		self._instance_score_threshold = instance_score_threshold
+		self._train_to_test_split_ratio = train_to_test_split_ratio
+		self._shuffle_order = shuffle_order
+		self._negative_shuffle_ratio = negative_shuffle_ratio
+		self._vectorizer_complexity = vectorizer_complexity
+		self._max_num_graphs_per_seq = max_num_graphs_per_seq
 		
 		logger.debug('Instantiated an RNASynth object.')
 		logger.debug(self.__dict__)
@@ -152,36 +197,6 @@ class RNASynth(object):
 		
 		return iterable_seq
 			 
-
-	"""
-	Synthesize RNA sequences given ..
-
-	Args:
-		importance_threshold_sequence_constraint: classification score threshold for identifying important nucleotides in a sequence.
-		min_size_connected_component_sequence_constraint: minimum number of adjacent important nucleotides which can form a sequence constraint.
-		importance_threshold_structure_constraint: classification score threshold for labeling important basepairs in a secondary structure.
-		min_size_connected_component_structure_constraint: minimum number of adjacent basepairs which can form a secondary structure constraint. 
-		This constraint is in the form of dot-bracket notation
-		min_size_connected_component_unpaired_structure_constraint: 
-		n_synthesized_sequences_per_seed_sequence: option for setting the number of synthesized sequences per constraint.
-		instance_score_threshold: predicted score threshold for filtering synthesized sequences.
-		train_to_test_split_ratio: ratio for splitting the sample dataset into train and test datasets.
-		shuffle_order: eden.modifier.seq.seq_to_seq parameter. 
-		negative_shuffle_ratio: number of negative sample sequences generated for each positive sample.
-		vectorizer_complexity: eden.graph.Vectorizer parameter.
-		max_num_graphs_per_seq: eden.converter.rna.rnashapes.rnashapes_to_eden parameter.
-
-	....
-	
-	Returns:
-		descibe
-
-	Takes as input an iterator over networkx graphs and outputs an iterator 
-	over fasta-seq,original-fasta-id pairs.
-	Uses antaRNA for sequence synthesis and EDeN for annotating networkx graphs.
-	Returns as output a fasta list.
-	"""
-
 	
 if __name__ == "__main__":
 

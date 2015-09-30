@@ -182,7 +182,7 @@ def extract_constraints(graphs, Cseq_threshold, Cseq_adjacency, dotnot_threshold
 		Cseq = extract_constraint_string(g, Cseq_threshold, Cseq_adjacency)
 		struct = extract_dot_struct(g,dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
 		
-		yield struct,Cseq,gc_content,fasta_id
+		yield struct, Cseq, gc_content, fasta_id
 
 
 if __name__ == "__main__":
