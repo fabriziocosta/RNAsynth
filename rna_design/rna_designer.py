@@ -60,27 +60,6 @@ class RNADesign(object):
 		return sequence
 
 
-"""
-Explanations
-
-Args:
-	antaRNA_params: parameter setting file for antaRNA wrappper.
-	importance_threshold_sequence_constraint: classification score threshold for identifying important nucleotides in a sequence.
-	min_size_connected_component_sequence_constraint: minimum number of adjacent important nucleotides which can form a sequence constraint.
-	importance_threshold_structure_constraint: classification score threshold for labeling important basepairs in a secondary structure.
-	min_size_connected_component_structure_constraint: minimum number of adjacent basepairs which can form a secondary structure constraint. 
-	This constraint is in the form of dot-bracket notation
-	min_size_connected_component_unpaired_structure_constraint: 
-	n_synthesized_sequences_per_seed_sequence: option for setting the number of synthesized sequences per constraint.
-	instance_score_threshold: predicted score threshold for filtering synthesized sequences.
-	train_to_test_split_ratio: ratio for splitting the sample dataset into train and test datasets.
-	shuffle_order: eden.modifier.seq.seq_to_seq parameter. 
-	negative_shuffle_ratio: number of negative sample sequences generated for each positive sample.
-	vectorizer_complexity: eden.graph.Vectorizer parameter.
-	max_num_graphs_per_seq: eden.converter.rna.rnashapes.rnashapes_to_eden parameter.
-"""
-
-
 if __name__ == "__main__":
 
 	logging.basicConfig(level=logging.INFO)

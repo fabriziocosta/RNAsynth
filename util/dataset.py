@@ -36,7 +36,7 @@ def split_to_train_and_test(rfam_id = None , train_to_test_split_ratio = None):
 	return train, test
 
 
-def generate_negatives_and_evaluate(iterable = None , estimator = None, negative_shuffle_ratio = None, shuffle_order = None):
+def generate_negatives_and_evaluate(iterable = None , estimator = None, negative_shuffle_ratio = None, shuffle_order = None, vectorizer_complexity = None):
 
 	vectorizer = Vectorizer(complexity=vectorizer_complexity)
 	iterable, iterable_neg = binary_classification_dataset_setup(iterable_seq = iterable, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
@@ -55,6 +55,6 @@ def generate_negatives_and_fit(iterable = None, negative_shuffle_ratio = None, s
 def fit_evaluate(iterable_train = None , iterable_test = None, negative_shuffle_ratio = None, shuffle_order = None, vectorizer_complexity = None):
 
 	estimator = generate_negatives_and_fit(iterable = iterable_train, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
-	roc, apr = generate_negatives_and_evaluate(iterable = iterable_test , estimator = estimator, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order)
+	roc, apr = generate_negatives_and_evaluate(iterable = iterable_test , estimator = estimator, negative_shuffle_ratio = negative_shuffle_ratio, shuffle_order = shuffle_order, vectorizer_complexity = vectorizer_complexity)
 	return roc, apr
 	
