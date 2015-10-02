@@ -85,7 +85,7 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
     synthesizer = RNASynth(params)
 
     # Produce synthesied sequences generator.
-    iterable_seq_syn = synthesizer.sample(iterable_seq=iter_train_syn)
+    iterable_seq_syn = synthesizer.fit_sample(iterable_seq=iter_train_syn)
 
     # Mix synthesized and true samples.
     iterable_seq_mixed = chain(iterable_seq_syn, iter_seq_true)
@@ -93,7 +93,7 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
     # Train MixedSamplesModel classifier. Evaluate.
     logger.debug(
         'Fit estimator on original + sampled data and evaluate the estimator.')
-    roc_t, apr_t = fit_evaluate(iterable_train=iterable_seq_mixed, iterable_test=iter_test_,
+    roc_s, apr_s = fit_evaluate(iterable_train=iterable_seq_mixed, iterable_test=iter_test_,
                                 negative_shuffle_ratio=negative_shuffle_ratio,
                                 shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
 
@@ -140,13 +140,13 @@ def get_args():
     parser.add_argument('--negative_shuffle_ratio', '-ns', type=int,
                         default=2, help='number of negative samples generated per sample')
     parser.add_argument(
-        '--vectorizer_complexity', '-v', type=int, default=2, help='????????')
+        '--vectorizer_complexity', '-v', type=int, default=2, help='eden Vectorizer complexity')
     parser.add_argument('--data_fraction_lower_bound', '-dfl',
-                        type=float, default=0.1, help='lower bound for ???')
+                        type=float, default=0.1, help='lower bound for generating the list of sample data fractions')
     parser.add_argument(
-        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0, help='????????')
+        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0, help='upper bound for generating the list of sample data fractions')
     parser.add_argument(
-        '--data_fraction_chunks', '-dfc', type=int, default=10, help='????????')
+        '--data_fraction_chunks', '-dfc', type=int, default=10, help='number of chunks in the list of sample data fractions')
     args = parser.parse_args()
     return args
 

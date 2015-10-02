@@ -14,7 +14,7 @@ def get_args():
 	Returns a dictionary.
 	"""
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--tGC', '-tgc', type=float, default=0.5, help='')
+	parser.add_argument('--tGC', '-tgc', type=float, default=0.3, help='')
 	parser.add_argument('--colonies', '-c', type=int, default=1, help='')
 	parser.add_argument('--name', '-n', type=str, default='antaRNA_', help='')
 	parser.add_argument('--alpha', '-a', type=float, default=1.0, help='')
