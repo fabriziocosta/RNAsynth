@@ -1500,7 +1500,6 @@ def exe():
     - antaRNA was only tested under Linux.
     
     - For questions and remarks please feel free to contact us at http://www.bioinf.uni-freiburg.de/
-
 	""",
 	
 	epilog = """   
@@ -1508,7 +1507,6 @@ def exe():
 		python antaRNA.py --Cstr "...(((...)))..." --tGC 0.5 -n 2
 		python antaRNA.py --Cstr ".........AAA(((...)))AAA........." --tGC 0.5 -n 10 --output_file /path/to/antaRNA_TESTRUN -ov
 		python antaRNA.py --Cstr "BBBBB....AAA(((...)))AAA....BBBBB" --Cseq "NNNNANNNNNCNNNNNNNNNNNGNNNNNNUNNN" --tGC 0.5 -n 10
-
 	#########################################################################
 	#       --- Hail to the Queen!!! All power to the swarm!!! ---          #
 	#########################################################################
@@ -1565,4 +1563,3 @@ def checkForViennaTools():
 if __name__ == "__main__":
 
 	exe()
-    
