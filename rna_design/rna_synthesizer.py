@@ -34,8 +34,8 @@ def pre_process(iterable_seq, **opts):
     """
     DOCUMENTATION
     """
-    graphs = rnashapes_to_eden(
-        seqs, shape_type=5, energy_range=35, max_num=opts['max_num'], split_components=True)
+    graphs = rnashapes_to_eden(seqs, shape_type=5, energy_range=35, max_num=opts[
+                               'max_num'], split_components=True)
     return graphs
 
 
@@ -135,7 +135,7 @@ class RNASynth(object):
         self._max_num_graphs_per_seq = max_num_graphs_per_seq
 
         logger.debug('Instantiated an RNASynth object.')
-        # logger.info(self.__dict__)
+        logger.debug(self.__dict__)
 
     def __repr__(self):
         obj_str = 'RNASynth:\n'
@@ -163,7 +163,8 @@ class RNASynth(object):
         """
         DOCUMENTATION
         """
-        iterable_graph = self.vectorizer.annotate(iterable_graph, estimator=self.estimator)
+        iterable_graph = self.vectorizer.annotate(
+            iterable_graph, estimator=self.estimator)
         iterable = ce.extract_constraints(iterable_graph, self._importance_threshold_sequence_constraint,
                                           self._min_size_connected_component_sequence_constraint,
                                           self._importance_threshold_structure_constraint,
@@ -187,40 +188,35 @@ class RNASynth(object):
             if prediction > self._instance_score_threshold:
                 yield seq
 
-    def fit_sample(self, iterable_seq):
-		"""
-		DOCUMENTATION
-		"""
-		iterable_seq, iterable_seq_ = tee(iterable_seq)
-		self.fit(iterable_seq)
-		iterable_seq = self.sample(iterable_seq_)
-		return iterable_seq
-
     def sample(self, iterable_seq):
         """
         DOCUMENTATION
         """
+        # iterable_seq, iterable_seq_ = tee(iterable_seq)
+        # self.estimator = self.__fit(iterable_seq)
         iterable_graph = rnafold_to_eden(iterable_seq)
         iterable_seq = self.__design(iterable_graph)
         iterable_seq = self.__filter(iterable_seq)
+
         return iterable_seq
 
 
 if __name__ == "__main__":
 
-	logging.basicConfig(level=logging.INFO)
-	logger.info('Call to RNASynthesizer module.')
+    logging.basicConfig(level=logging.INFO)
+    logger.info('Call to RNASynthesizer module.')
 
-	params = {'importance_threshold_sequence_constraint': 0,
-			  'min_size_connected_component_sequence_constraint': 1, 'importance_threshold_structure_constraint': 0,
-			  'min_size_connected_component_structure_constraint': 1, 'min_size_connected_component_unpaired_structure_constraint': 1,
-			  'n_synthesized_sequences_per_seed_sequence': 2, 'instance_score_threshold': 0,
-			  'train_to_test_split_ratio': .2, 'shuffle_order': 2, 'negative_shuffle_ratio': 2,
-			  'vectorizer_complexity': 2, 'max_num_graphs_per_seq': 3}
+    params = {'importance_threshold_sequence_constraint': 0,
+              'min_size_connected_component_sequence_constraint': 1, 'importance_threshold_structure_constraint': 0,
+              'min_size_connected_component_structure_constraint': 1, 'min_size_connected_component_unpaired_structure_constraint': 1,
+              'n_synthesized_sequences_per_seed_sequence': 2, 'instance_score_threshold': 0,
+              'train_to_test_split_ratio': .2, 'shuffle_order': 2, 'negative_shuffle_ratio': 2,
+              'vectorizer_complexity': 2, 'max_num_graphs_per_seq': 3}
 
-	rfam_id = 'RF01685'
-	iterable_seq = fasta_to_sequence('http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
-	synthesizer = RNASynth(params)
-	iter_seq = synthesizer.fit_sample(iterable_seq)
-	for item in iter_seq:
-		print item
+    rfam_id = 'RF01685'
+    iterable_seq = fasta_to_sequence(
+        'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
+    synthesizer = RNASynth(params)
+    iter_seq = synthesizer.sample(iterable_seq)
+    for item in iter_seq:
+        print item

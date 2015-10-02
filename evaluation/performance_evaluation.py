@@ -142,11 +142,14 @@ def get_args():
     parser.add_argument(
         '--vectorizer_complexity', '-v', type=int, default=2, help='eden Vectorizer complexity')
     parser.add_argument('--data_fraction_lower_bound', '-dfl',
-                        type=float, default=0.1, help='lower bound for generating the list of sample data fractions')
+                        type=float, default=0.1,
+                        help='lower bound for generating the list of sample data fractions')
     parser.add_argument(
-        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0, help='upper bound for generating the list of sample data fractions')
+        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0,
+        help='upper bound for generating the list of sample data fractions')
     parser.add_argument(
-        '--data_fraction_chunks', '-dfc', type=int, default=10, help='number of chunks in the list of sample data fractions')
+        '--data_fraction_chunks', '-dfc', type=int, default=10,
+        help='number of chunks in the list of sample data fractions')
     args = parser.parse_args()
     return args
 
@@ -190,7 +193,8 @@ def learning_curve(params):
         iter_test, iter_test_ = tee(iter_test)
 
         mroct, maprt, mrocs, maprs, elapsed_time = batch_performance_evaluation(params,
-                                                                                iter_train=iter_train_, iter_test=iter_test_,
+                                                                                iter_train=iter_train_,
+                                                                                iter_test=iter_test_,
                                                                                 relative_size=data_fraction)
 
         logger.info('Performance measures for data fraction: %.1f' %
