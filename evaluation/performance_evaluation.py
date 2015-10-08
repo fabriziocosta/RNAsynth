@@ -19,6 +19,46 @@ from util.dataset import fit_evaluate
 logger = logging.getLogger(__name__)
 
 
+def performance_evaluation(params, iter_train=None, iter_test=None):
+    """
+    DOCUMENTATION
+    """
+    shuffle_order = params['shuffle_order']
+    negative_shuffle_ratio = params['negative_shuffle_ratio']
+    vectorizer_complexity = params['vectorizer_complexity']
+
+    # Copy training sample iterable for sequence synthesis and mixed samples
+    # set production.
+    iter_train, iter_train_syn, iter_seq_true = tee(iter_train, 3)
+
+    # Copy test sample iterable used for evaluation.
+    iter_test, iter_test_ = tee(iter_test)
+
+    # Train TrueSamplesModel classifier. Evaluate.
+    logger.info('Fit estimator on original data and evaluate the estimator.')
+    roc_t, apr_t = fit_evaluate(iterable_train=iter_train, iterable_test=iter_test,
+                                negative_shuffle_ratio=negative_shuffle_ratio,
+                                shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
+
+    # Create an RNASynth object.
+    synthesizer = RNASynth(params)
+
+    # Produce synthesied sequences generator.
+    iterable_seq_syn = synthesizer.fit_sample(iter_train_syn)
+
+    # Mix synthesized and true samples.
+    iterable_seq_mixed = chain(iterable_seq_syn, iter_seq_true)
+
+    # Train MixedSamplesModel classifier. Evaluate.
+    logger.info(
+        'Fit estimator on original + sampled data and evaluate the estimator.')
+    roc_s, apr_s = fit_evaluate(iterable_train=iterable_seq_mixed, iterable_test=iter_test_,
+                                negative_shuffle_ratio=negative_shuffle_ratio,
+                                shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
+
+    return roc_t, apr_t, roc_s, apr_s
+
+
 def batch_performance_evaluation(params, iter_train=None, iter_test=None, relative_size=None):
     """
     DOCUMENTATION
@@ -58,100 +98,6 @@ def batch_performance_evaluation(params, iter_train=None, iter_test=None, relati
     elapsed_time = time.time() - start_time
 
     return e_roc_t, e_apr_t, e_roc_s, e_apr_s, elapsed_time
-
-
-def performance_evaluation(params, iter_train=None, iter_test=None):
-    """
-    DOCUMENTATION
-    """
-    shuffle_order = params['shuffle_order']
-    negative_shuffle_ratio = params['negative_shuffle_ratio']
-    vectorizer_complexity = params['vectorizer_complexity']
-
-    # Copy training sample iterable for sequence synthesis and mixed samples
-    # set production.
-    iter_train, iter_train_syn, iter_seq_true = tee(iter_train, 3)
-
-    # Copy test sample iterable used for evaluation.
-    iter_test, iter_test_ = tee(iter_test)
-
-    # Train TrueSamplesModel classifier. Evaluate.
-    logger.debug('Fit estimator on original data and evaluate the estimator.')
-    roc_t, apr_t = fit_evaluate(iterable_train=iter_train, iterable_test=iter_test,
-                                negative_shuffle_ratio=negative_shuffle_ratio,
-                                shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
-
-    # Create an RNASynth object.
-    synthesizer = RNASynth(params)
-
-    # Produce synthesied sequences generator.
-    iterable_seq_syn = synthesizer.fit_sample(iterable_seq=iter_train_syn)
-
-    # Mix synthesized and true samples.
-    iterable_seq_mixed = chain(iterable_seq_syn, iter_seq_true)
-
-    # Train MixedSamplesModel classifier. Evaluate.
-    logger.debug(
-        'Fit estimator on original + sampled data and evaluate the estimator.')
-    roc_s, apr_s = fit_evaluate(iterable_train=iterable_seq_mixed, iterable_test=iter_test_,
-                                negative_shuffle_ratio=negative_shuffle_ratio,
-                                shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
-
-    return roc_t, apr_t, roc_s, apr_s
-
-
-def check_data_fractions_integrity(lower_bound, upper_bound, chuncks):
-    if not(0.0 < lower_bound <= 1.0) or not(0.0 <= upper_bound <= 1.0) or (upper_bound <= lower_bound):
-        return False
-    return True
-
-
-def get_args():
-    """
-    DOCUMENTATION
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
-    parser.add_argument('--log_file', '-l', type=str,
-                        default='~/Synthesis.log', help='experiment log file')
-    parser.add_argument('--antaRNA_params', '-p', type=str,
-                        default='./antaRNA.ini', help='antaRNA initialization file')
-    parser.add_argument('--importance_threshold_sequence_constraint',
-                        '-a', type=int, default=0, help='nucleotide selection threshold')
-    parser.add_argument('--min_size_connected_component_sequence_constraint',
-                        '-b', type=int, default=1, help='nucleotide minimum adjacency')
-    parser.add_argument('--importance_threshold_structure_constraint',
-                        '-c', type=int, default=0, help='basepair selection threshold')
-    parser.add_argument('--min_size_connected_component_structure_constraint',
-                        '-d', type=int, default=1, help='basepairs minimum adjacency')
-    parser.add_argument('--min_size_connected_component_unpaired_structure_constraint',
-                        '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
-    parser.add_argument('--n_synthesized_sequences_per_seed_sequence', '-n',
-                        type=int, default=1, help='number of synthesized sequences per constraint')
-    parser.add_argument('--instance_score_threshold', '-f',
-                        type=int, default=0, help='filtering threshold')
-    parser.add_argument('--n_experiment_repetitions', '-j',
-                        type=int, default=10, help='runs per experiment')
-    parser.add_argument('--train_to_test_split_ratio', '-r',
-                        type=float, default=0.2, help='train-to-test size ratio')
-    parser.add_argument(
-        '--shuffle_order', '-s', type=int, default=2, help='shuffle order')
-    parser.add_argument('--negative_shuffle_ratio', '-ns', type=int,
-                        default=2, help='number of negative samples generated per sample')
-    parser.add_argument(
-        '--vectorizer_complexity', '-v', type=int, default=2, help='eden Vectorizer complexity')
-    parser.add_argument('--data_fraction_lower_bound', '-dfl',
-                        type=float, default=0.1,
-                        help='lower bound for generating the list of sample data fractions')
-    parser.add_argument(
-        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0,
-        help='upper bound for generating the list of sample data fractions')
-    parser.add_argument(
-        '--data_fraction_chunks', '-dfc', type=int, default=10,
-        help='number of chunks in the list of sample data fractions')
-    args = parser.parse_args()
-    return args
 
 
 def learning_curve(params):
@@ -215,6 +161,60 @@ def learning_curve(params):
         apr_s.append(maprs)
 
     return roc_t, roc_s, apr_t, apr_s, data_fractions
+
+
+def check_data_fractions_integrity(lower_bound, upper_bound, chuncks):
+    if not(0.0 < lower_bound <= 1.0) or not(0.0 <= upper_bound <= 1.0) or (upper_bound <= lower_bound):
+        return False
+    return True
+
+
+def get_args():
+    """
+    DOCUMENTATION
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
+    parser.add_argument('--log_file', '-l', type=str,
+                        default='~/Synthesis.log', help='experiment log file')
+    parser.add_argument('--antaRNA_params', '-p', type=str,
+                        default='./antaRNA.ini', help='antaRNA initialization file')
+    parser.add_argument('--importance_threshold_sequence_constraint',
+                        '-a', type=int, default=0, help='nucleotide selection threshold')
+    parser.add_argument('--min_size_connected_component_sequence_constraint',
+                        '-b', type=int, default=1, help='nucleotide minimum adjacency')
+    parser.add_argument('--importance_threshold_structure_constraint',
+                        '-c', type=int, default=0, help='basepair selection threshold')
+    parser.add_argument('--min_size_connected_component_structure_constraint',
+                        '-d', type=int, default=1, help='basepairs minimum adjacency')
+    parser.add_argument('--min_size_connected_component_unpaired_structure_constraint',
+                        '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
+    parser.add_argument('--n_synthesized_sequences_per_seed_sequence', '-n',
+                        type=int, default=1, help='number of synthesized sequences per constraint')
+    parser.add_argument('--instance_score_threshold', '-f',
+                        type=int, default=0, help='filtering threshold')
+    parser.add_argument('--n_experiment_repetitions', '-j',
+                        type=int, default=10, help='runs per experiment')
+    parser.add_argument('--train_to_test_split_ratio', '-r',
+                        type=float, default=0.2, help='train-to-test size ratio')
+    parser.add_argument(
+        '--shuffle_order', '-s', type=int, default=2, help='shuffle order')
+    parser.add_argument('--negative_shuffle_ratio', '-ns', type=int,
+                        default=2, help='number of negative samples generated per sample')
+    parser.add_argument(
+        '--vectorizer_complexity', '-v', type=int, default=2, help='eden Vectorizer complexity')
+    parser.add_argument('--data_fraction_lower_bound', '-dfl',
+                        type=float, default=0.1,
+                        help='lower bound for generating the list of sample data fractions')
+    parser.add_argument(
+        '--data_fraction_upper_bound', '-dfu', type=float, default=1.0,
+        help='upper bound for generating the list of sample data fractions')
+    parser.add_argument(
+        '--data_fraction_chunks', '-dfc', type=int, default=10,
+        help='number of chunks in the list of sample data fractions')
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == "__main__":

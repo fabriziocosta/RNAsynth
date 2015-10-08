@@ -16,14 +16,11 @@ from eden.converter.rna.rnafold import rnafold_to_eden
 from eden.converter.fasta import fasta_to_sequence
 from eden.converter.rna.rnashapes import rnashapes_to_eden
 from eden.util import fit
-from eden.modifier.seq import seq_to_seq
-from eden.modifier.seq import shuffle_modifier
 from eden.graph import Vectorizer
 
 from rna_design import constraint_extractor as ce
 from rna_designer import RNADesign
 
-from util.dataset import rfam_url
 from util.dataset import binary_classification_dataset_setup
 
 
@@ -34,8 +31,8 @@ def pre_process(iterable_seq, **opts):
     """
     DOCUMENTATION
     """
-    graphs = rnashapes_to_eden(seqs, shape_type=5, energy_range=35, max_num=opts[
-                               'max_num'], split_components=True)
+    graphs = rnashapes_to_eden(iterable_seq, shape_type=5, energy_range=35,
+                               max_num=opts['max_num'], split_components=True)
     return graphs
 
 
@@ -56,7 +53,7 @@ class RNASynth(object):
             Minimum number of adjacent important nucleotides which can form a sequence constraint.
 
 
-    importance_threshold_structure_constraint : int (default 0)	
+    importance_threshold_structure_constraint : int (default 0)
             Classification score threshold for labeling important basepairs in a secondary structure.
 
 
@@ -120,7 +117,6 @@ class RNASynth(object):
         self.designer = designer
         self.pre_processor = pre_processor
 
-        self.importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
         self._importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
         self._min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint
         self._importance_threshold_structure_constraint = importance_threshold_structure_constraint
@@ -140,7 +136,7 @@ class RNASynth(object):
     def __repr__(self):
         obj_str = 'RNASynth:\n'
         obj_str += 'Dataset:\n'
-        obj_str += 'shuffle_order: %d\n' % self.shuffle_order
+        obj_str += 'shuffle_order: %d\n' % self._shuffle_order
         return obj_str
 
     def fit(self, iterable_seq, n_iter_search=1):
@@ -170,6 +166,7 @@ class RNASynth(object):
                                           self._importance_threshold_structure_constraint,
                                           self._min_size_connected_component_structure_constraint,
                                           self._min_size_connected_component_unpaired_structure_constraint)
+
         for (dot_bracket, seq_constraint, gc_content, fasta_id) in iterable:
             for count in range(self._n_synthesized_sequences_per_seed_sequence):
                 sequence = self.designer.design(dot_bracket, seq_constraint)
@@ -192,11 +189,19 @@ class RNASynth(object):
         """
         DOCUMENTATION
         """
-        # iterable_seq, iterable_seq_ = tee(iterable_seq)
-        # self.estimator = self.__fit(iterable_seq)
         iterable_graph = rnafold_to_eden(iterable_seq)
         iterable_seq = self.__design(iterable_graph)
         iterable_seq = self.__filter(iterable_seq)
+
+        return iterable_seq
+
+    def fit_sample(self, iterable_seq):
+        """
+        DOCUMENTATION
+        """
+        iterable_seq, iterable_seq_ = tee(iterable_seq)
+        self.fit(iterable_seq)
+        iterable_seq = self.sample(iterable_seq_)
 
         return iterable_seq
 
@@ -217,6 +222,7 @@ if __name__ == "__main__":
     iterable_seq = fasta_to_sequence(
         'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
     synthesizer = RNASynth(params)
-    iter_seq = synthesizer.sample(iterable_seq)
+
+    iter_seq = synthesizer.fit_sample(iterable_seq)
     for item in iter_seq:
         print item
