@@ -5,58 +5,60 @@ import networkx as nx
 
 
 class ConstraintExtractor():
-	def __init__(self):
-		return
-		
-	def extract_constraint_string(self, graph, threshold, adjacency=1, padding='N'):
-		"""
-		Generates a sequence constraint string from an annotated Networkx graph.
-		Adjacent nodes with the connectivity above the threshold show up
-		in the output string as actual nucleotides.
-		Other nodes appear as padding in the output string.
-		"""
-		cstr_dict = build_nodes_dict(graph)
-		for node in get_importance_list(graph, threshold, adjacency, importance=-1):
-			cstr_dict[node] = padding
-		cstr = dict_to_string(cstr_dict)
-		return cstr
+
+    def __init__(self):
+        return
+
+    def extract_constraint_string(self, graph, threshold, adjacency=1, padding='N'):
+        """
+        Generates a sequence constraint string from an annotated Networkx graph.
+        Adjacent nodes with the connectivity above the threshold show up
+        in the output string as actual nucleotides.
+        Other nodes appear as padding in the output string.
+        """
+        cstr_dict = build_nodes_dict(graph)
+        for node in get_importance_list(graph, threshold, adjacency, importance=-1):
+            cstr_dict[node] = padding
+        cstr = dict_to_string(cstr_dict)
+        return cstr
+
+    def extract_dot_struct(self, graph, threshold, importance_adjacency=1, unpaired_adjacency=1):
+        """
+        Generates a structure constraint string in the form of dot-bracket from an annotated Networkx graph.
+        Base pairs above the importance threshold appear in the output string.
+        """
+        list_bpairs = get_basepair_list(graph)
+        list_unpaired = find_unpaired_regions(graph, unpaired_adjacency)
+        dic_dot_str = build_generic_nodes_dict(graph)
+        importance_list = get_importance_list(
+            graph, threshold, importance_adjacency)
+
+        for i, j in list_bpairs:
+            if i in importance_list and j in importance_list:
+                dic_dot_str[i] = '('
+                dic_dot_str[j] = ')'
+        for unpaired_node in list_unpaired:
+            dic_dot_str[unpaired_node] = '.'
+        cstruct = dict_to_string(dic_dot_str)
+        return cstruct
+
+    def extract_constraints(self, graphs, cseq_threshold, cseq_adjacency, dotnot_threshold,
+                            dotnot_adjacency, unpaired_adjacency):
+        """
+        Generator function which yields sequence and structure constraint strings extracted from an annotated Networkx graph.
+        Accepts connectivity values and thresholds for sequence and structure constraints for the same graph separately .
+        """
+        for g in graphs:
+            fasta_id = g.graph['id']
+            gc_content = compute_gc_content(g)
+            cseq = self.extract_constraint_string(
+                g, cseq_threshold, cseq_adjacency)
+            struct = self.extract_dot_struct(
+                g, dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
+
+            yield struct, cseq, gc_content, fasta_id
 
 
-	def extract_dot_struct(self, graph, threshold, importance_adjacency=1, unpaired_adjacency=1):
-		"""
-		Generates a structure constraint string in the form of dot-bracket from an annotated Networkx graph.
-		Base pairs above the importance threshold appear in the output string.
-		"""
-		list_bpairs = get_basepair_list(graph)
-		list_unpaired = find_unpaired_regions(graph, unpaired_adjacency)
-		dic_dot_str = build_generic_nodes_dict(graph)
-		importance_list = get_importance_list(graph, threshold, importance_adjacency)
-
-		for i, j in list_bpairs:
-			if i in importance_list and j in importance_list:
-				dic_dot_str[i] = '('
-				dic_dot_str[j] = ')'
-		for unpaired_node in list_unpaired:
-			dic_dot_str[unpaired_node] = '.'
-		cstruct = dict_to_string(dic_dot_str)
-		return cstruct
-
-	def extract_constraints(self, graphs, cseq_threshold, cseq_adjacency, dotnot_threshold,
-							dotnot_adjacency, unpaired_adjacency):
-		"""
-		Generator function which yields sequence and structure constraint strings extracted from an annotated Networkx graph.
-		Accepts connectivity values and thresholds for sequence and structure constraints for the same graph separately .
-		"""
-		for g in graphs:
-			fasta_id = g.graph['id']
-			gc_content = compute_gc_content(g)
-			cseq = extract_constraint_string(g, cseq_threshold, cseq_adjacency)
-			struct = extract_dot_struct(
-				g, dotnot_threshold, dotnot_adjacency, unpaired_adjacency)
-
-			yield struct, cseq, gc_content, fasta_id	
-		
-		
 def dict_to_string(dictionary):
     """
     Generic function to build a sequential string of dictionary values.
