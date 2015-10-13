@@ -41,8 +41,8 @@ class RNASynth(object):
 
     """Short one line.
 
-    Larger.
-    Multi-line.
+    Larger help explanation.
+    Multi-line...
 
     Parameters
     ----------
