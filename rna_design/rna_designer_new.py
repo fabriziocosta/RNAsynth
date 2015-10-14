@@ -68,9 +68,13 @@ class AntaRNAv109Designer(AbstractDesigner):
         self.params['paramFile'] = paramFile
         self.params['return_mod'] = return_mod
         self.params['seed'] = seed
-        logger.info('Instantiated an RNADesigner object.')
+        logger.info('Instantiated an instance of AntaRNAv109Designer.')
 
-    def design(self, dot_bracket_constraint_string, sequence_constraint_string):
+    # dot_bracket_constraint_string, sequence_constraint_string):
+    def design(self, constraints=None):
+        dot_bracket_constraint_string = constraints[0]
+        sequence_constraint_string = constraints[1]
+        self.params['tGC'] = constraints[2]
         result = ', '.join(antaRNA_v109.findSequence(
             dot_bracket_constraint_string, sequence_constraint_string, **self.params))
         sequence = result.split("\n")[2]
@@ -153,9 +157,6 @@ class AntaRNAv117Designer(AbstractDesigner):
         self.designer.params.Cseqweight = Cseqweight
         self.designer.params.omega = omega
         self.designer.params.time = time
-        # self.designer.params.py = False
-        print self.designer.params.error
-        # exit(1)
 
         if not(self.designer.params.error == "0"):
             logger.info(
@@ -163,7 +164,7 @@ class AntaRNAv117Designer(AbstractDesigner):
             logger.info('%s' % self.designer.params.error)
             sys.exit()
 
-        logger.info('Instantiated an instance of antRNADesigner object.')
+        logger.info('Instantiated an instance of AntaRNAv117Designer.')
 
     def design(self, constraints=None):
         """
@@ -173,10 +174,12 @@ class AntaRNAv117Designer(AbstractDesigner):
         self.designer.params.Cstr = constraints[0]
         self.designer.params.Cseq = constraints[1]
         self.designer.params.tGC = constraints[2]
-        # self.designer.tGC = constraints[2]
         self.designer.params.check()
         self.designer.swarm()
-        # print self.designer.result
+        result = ''
+        for r in designer.designer.result:
+            result = r[1].split(":")[1]
+        return result
 
 
 if __name__ == "__main__":
@@ -187,8 +190,8 @@ if __name__ == "__main__":
                    "NNNNNNNNNNNNNNNNNNNNNNNNU", [0.5])
     designer = AntaRNAv117Designer()
 
-    designer.design(constraints=constraints)
-    for i, r in enumerate(designer.designer.result):
-        print "Result", i, ":"
-        # print r[0]
-        print r[1].split(":")[1]
+    r = designer.design(constraints=constraints)
+
+    designer2 = AntaRNAv109Designer()
+    result = designer2.design(constraints=("...(((...)))...((...))...",
+                                           "NNNNNNNNNNNNNNNNNNNNNNNNU", 0.3))
