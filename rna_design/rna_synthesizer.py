@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# sys
-
-# libr
-
-# local
 
 from itertools import tee
 from itertools import izip
@@ -18,8 +13,8 @@ from eden.converter.rna.rnashapes import rnashapes_to_eden
 from eden.util import fit
 from eden.graph import Vectorizer
 
-from rna_design import constraint_extractor as ce
-from rna_designer import RNADesign
+from rna_design.constraint_extractor import ConstraintExtractor
+from rna_designer_new import AntaRNAv109Designer
 
 from util.dataset import binary_classification_dataset_setup
 
@@ -40,8 +35,8 @@ class RNASynth(object):
 
     """Short one line.
 
-    Larger.
-    Multi-line.
+    Larger help explanation.
+    Multi-line...
 
     Parameters
     ----------
@@ -96,7 +91,8 @@ class RNASynth(object):
     def __init__(self,
                  estimator=SGDClassifier(),
                  vectorizer=Vectorizer(),
-                 designer=RNADesign(),
+                 designer=AntaRNAv109Designer(),
+                 constraint_extractor=ConstraintExtractor(),
                  pre_processor=pre_process,
                  importance_threshold_sequence_constraint=0,
                  min_size_connected_component_sequence_constraint=1,
@@ -116,6 +112,7 @@ class RNASynth(object):
         self.vectorizer = vectorizer
         self.designer = designer
         self.pre_processor = pre_processor
+        self.constraint_extractor = constraint_extractor
 
         self._importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
         self._min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint
@@ -140,9 +137,6 @@ class RNASynth(object):
         return obj_str
 
     def fit(self, iterable_seq, n_iter_search=1):
-        """
-        DOCUMENTATION
-        """
         iterable_graph, iterable_graph_neg = binary_classification_dataset_setup(
             iterable_seq=iterable_seq,
             negative_shuffle_ratio=self._negative_shuffle_ratio,
@@ -156,27 +150,19 @@ class RNASynth(object):
         return self
 
     def __design(self, iterable_graph):
-        """
-        DOCUMENTATION
-        """
         iterable_graph = self.vectorizer.annotate(
             iterable_graph, estimator=self.estimator)
-        iterable = ce.extract_constraints(iterable_graph, self._importance_threshold_sequence_constraint,
-                                          self._min_size_connected_component_sequence_constraint,
-                                          self._importance_threshold_structure_constraint,
-                                          self._min_size_connected_component_structure_constraint,
-                                          self._min_size_connected_component_unpaired_structure_constraint)
 
+        iterable = self.constraint_extractor.extract_constraints(
+            iterable_graph)
         for (dot_bracket, seq_constraint, gc_content, fasta_id) in iterable:
             for count in range(self._n_synthesized_sequences_per_seed_sequence):
-                sequence = self.designer.design(dot_bracket, seq_constraint)
+                sequence = self.designer.design(
+                    (dot_bracket, seq_constraint, gc_content))
                 header = fasta_id + '_' + str(count)
                 yield header, sequence
 
     def __filter(self, iterable_seq):
-        """
-        DOCUMENTATION
-        """
         iter1, iter2 = tee(iterable_seq)
         iterable_graph = rnafold_to_eden(iter1)
         predictions = self.vectorizer.predict(iterable_graph, self.estimator)
@@ -186,9 +172,6 @@ class RNASynth(object):
                 yield seq
 
     def sample(self, iterable_seq):
-        """
-        DOCUMENTATION
-        """
         iterable_graph = rnafold_to_eden(iterable_seq)
         iterable_seq = self.__design(iterable_graph)
         iterable_seq = self.__filter(iterable_seq)
@@ -196,9 +179,6 @@ class RNASynth(object):
         return iterable_seq
 
     def fit_sample(self, iterable_seq):
-        """
-        DOCUMENTATION
-        """
         iterable_seq, iterable_seq_ = tee(iterable_seq)
         self.fit(iterable_seq)
         iterable_seq = self.sample(iterable_seq_)
