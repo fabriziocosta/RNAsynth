@@ -14,7 +14,7 @@ from eden.util import fit
 from eden.graph import Vectorizer
 
 from rna_design.constraint_extractor import ConstraintExtractor
-from rna_designer_new import AntaRNAv109Designer
+from rna_designer import AntaRNAv109Designer
 
 from util.dataset import binary_classification_dataset_setup
 
