@@ -42,7 +42,7 @@ class AntaRNAv109Designer(AbstractDesigner):
                  temperature=37.0,
                  paramFile='',
                  return_mod=True,
-                 seed='none',
+                 seed='none'
                  ):
         self.params = {}
         self.params['tGC'] = tGC
@@ -173,11 +173,14 @@ class AntaRNAv117Designer(AbstractDesigner):
         # check first
         self.designer.params.Cstr = constraints[0]
         self.designer.params.Cseq = constraints[1]
-        self.designer.params.tGC = constraints[2]
+        if type(constraints[2]) == list:
+            self.designer.params.tGC = constraints[2]
+        else:
+            self.designer.params.tGC = [constraints[2]]
         self.designer.params.check()
         self.designer.swarm()
         result = ''
-        for r in designer.designer.result:
+        for r in self.designer.result:
             result = r[1].split(":")[1]
         return result
 
@@ -191,7 +194,8 @@ if __name__ == "__main__":
     designer = AntaRNAv117Designer()
 
     r = designer.design(constraints=constraints)
+    print r
 
-    designer2 = AntaRNAv109Designer()
-    result = designer2.design(constraints=("...(((...)))...((...))...",
-                                           "NNNNNNNNNNNNNNNNNNNNNNNNU", 0.3))
+    # designer2 = AntaRNAv109Designer()
+    # result = designer2.design(constraints=("...(((...)))...((...))...",
+    #                                        "NNNNNNNNNNNNNNNNNNNNNNNNU", 0.3))

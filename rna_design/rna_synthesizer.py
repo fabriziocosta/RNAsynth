@@ -14,7 +14,8 @@ from eden.util import fit
 from eden.graph import Vectorizer
 
 from rna_design.constraint_extractor import ConstraintExtractor
-from rna_designer import AntaRNAv109Designer
+# from rna_designer import AntaRNAv109Designer
+from rna_designer import AntaRNAv117Designer
 
 from util.dataset import binary_classification_dataset_setup
 
@@ -40,26 +41,6 @@ class RNASynth(object):
 
     Parameters
     ----------
-    importance_threshold_sequence_constraint : int (default 1)
-            Classification score threshold for identifying important nucleotides in a sequence.
-
-
-    min_size_connected_component_sequence_constraint : int (default 3)
-            Minimum number of adjacent important nucleotides which can form a sequence constraint.
-
-
-    importance_threshold_structure_constraint : int (default 0)
-            Classification score threshold for labeling important basepairs in a secondary structure.
-
-
-    min_size_connected_component_structure_constraint : int (default 1)
-            Minimum number of adjacent basepairs which can form a secondary structure constraint.
-
-
-    min_size_connected_component_unpaired_structure_constraint : int (default 1)
-            Minimum number of adjacent backbones which can form a secondary structure constraint.
-
-
     n_synthesized_sequences_per_seed_sequence : int (default 2)
             Option for setting the number of synthesized sequences per constraint.
 
@@ -91,14 +72,9 @@ class RNASynth(object):
     def __init__(self,
                  estimator=SGDClassifier(),
                  vectorizer=Vectorizer(),
-                 designer=AntaRNAv109Designer(),
+                 designer=AntaRNAv117Designer(),
                  constraint_extractor=ConstraintExtractor(),
                  pre_processor=pre_process,
-                 importance_threshold_sequence_constraint=0,
-                 min_size_connected_component_sequence_constraint=1,
-                 importance_threshold_structure_constraint=0,
-                 min_size_connected_component_structure_constraint=1,
-                 min_size_connected_component_unpaired_structure_constraint=1,
                  n_synthesized_sequences_per_seed_sequence=2,
                  instance_score_threshold=0,
                  train_to_test_split_ratio=0.2,
@@ -114,11 +90,6 @@ class RNASynth(object):
         self.pre_processor = pre_processor
         self.constraint_extractor = constraint_extractor
 
-        self._importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
-        self._min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint
-        self._importance_threshold_structure_constraint = importance_threshold_structure_constraint
-        self._min_size_connected_component_structure_constraint = min_size_connected_component_structure_constraint
-        self._min_size_connected_component_unpaired_structure_constraint = min_size_connected_component_unpaired_structure_constraint
         self._n_synthesized_sequences_per_seed_sequence = n_synthesized_sequences_per_seed_sequence
         self._instance_score_threshold = instance_score_threshold
         self._train_to_test_split_ratio = train_to_test_split_ratio
@@ -191,10 +162,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logger.info('Call to RNASynthesizer module.')
 
-    params = {'importance_threshold_sequence_constraint': 0,
-              'min_size_connected_component_sequence_constraint': 1, 'importance_threshold_structure_constraint': 0,
-              'min_size_connected_component_structure_constraint': 1, 'min_size_connected_component_unpaired_structure_constraint': 1,
-              'n_synthesized_sequences_per_seed_sequence': 2, 'instance_score_threshold': 0,
+    params = {'n_synthesized_sequences_per_seed_sequence': 2, 'instance_score_threshold': 0,
               'train_to_test_split_ratio': .2, 'shuffle_order': 2, 'negative_shuffle_ratio': 2,
               'vectorizer_complexity': 2, 'max_num_graphs_per_seq': 3}
 
