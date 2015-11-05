@@ -5,7 +5,27 @@ import networkx as nx
 
 
 class ConstraintExtractor():
+    """
+    importance_threshold_sequence_constraint : int (default 1)
+            Classification score threshold for identifying important nucleotides in a sequence.
 
+
+    min_size_connected_component_sequence_constraint : int (default 3)
+            Minimum number of adjacent important nucleotides which can form a sequence constraint.
+
+
+    importance_threshold_structure_constraint : int (default 0)
+            Classification score threshold for labeling important basepairs in a secondary structure.
+
+
+    min_size_connected_component_structure_constraint : int (default 1)
+            Minimum number of adjacent basepairs which can form a secondary structure constraint.
+
+
+    min_size_connected_component_unpaired_structure_constraint : int (default 1)
+            Minimum number of adjacent backbones which can form a secondary structure constraint.
+
+    """
     def __init__(self,
                  importance_threshold_sequence_constraint=0,
                  min_size_connected_component_sequence_constraint=1,

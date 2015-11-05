@@ -10,7 +10,8 @@ import numpy as np
 
 from eden.util import random_bipartition_iter
 
-from rna_design.rna_synthesizer import RNASynth
+# from rna_design.rna_synthesizer import RNASynth
+from rna_design.rna_synthesizer_n import Initializer
 
 from util.dataset import split_to_train_and_test
 from util.dataset import fit_evaluate
@@ -19,9 +20,8 @@ from util.dataset import fit_evaluate
 logger = logging.getLogger(__name__)
 
 
-def performance_evaluation(params, iter_train=None, iter_test=None):
+def performance_evaluation(params, synthesizer=None, iter_train=None, iter_test=None):
     """
-    DOCUMENTATION
     """
     shuffle_order = params['shuffle_order']
     negative_shuffle_ratio = params['negative_shuffle_ratio']
@@ -40,8 +40,7 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
                                 negative_shuffle_ratio=negative_shuffle_ratio,
                                 shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
 
-    # Create an RNASynth object.
-    synthesizer = RNASynth(params)
+    # synthesizer = RNASynth(params)
 
     # Produce synthesied sequences generator.
     iterable_seq_syn = synthesizer.fit_sample(iter_train_syn)
@@ -59,9 +58,8 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
     return roc_t, apr_t, roc_s, apr_s
 
 
-def batch_performance_evaluation(params, iter_train=None, iter_test=None, relative_size=None):
+def batch_performance_evaluation(params, synthesizer=None, iter_train=None, iter_test=None, relative_size=None):
     """
-    DOCUMENTATION
     """
     n_experiment_repetitions = params['n_experiment_repetitions']
 
@@ -87,7 +85,7 @@ def batch_performance_evaluation(params, iter_train=None, iter_test=None, relati
             iter_test_, relative_size=relative_size)
 
         roc_t, apr_t, roc_s, apr_s = performance_evaluation(
-            params, iter_train=iter_train_, iter_test=iter_test_)
+            params, synthesizer=synthesizer, iter_train=iter_train_, iter_test=iter_test_)
 
         # Update experiment performance measures.
         e_roc_t.append(roc_t)
@@ -102,10 +100,8 @@ def batch_performance_evaluation(params, iter_train=None, iter_test=None, relati
 
 def learning_curve(params):
     """
-    DOCUMENTATION
     """
     rfam_id = params['rfam_id']
-    # log_file = params['log_file']
     train_to_test_split_ratio = params['train_to_test_split_ratio']
 
     data_fraction_lower_bound = params['data_fraction_lower_bound']
@@ -138,7 +134,11 @@ def learning_curve(params):
         iter_train, iter_train_ = tee(iter_train)
         iter_test, iter_test_ = tee(iter_test)
 
+        # Create an instance of the synthesizer object.
+        initializer = Initializer()
+        synthesizer = initializer.init_synthesizer()
         mroct, maprt, mrocs, maprs, elapsed_time = batch_performance_evaluation(params,
+                                                                                synthesizer=synthesizer,
                                                                                 iter_train=iter_train_,
                                                                                 iter_test=iter_test_,
                                                                                 relative_size=data_fraction)
@@ -171,7 +171,6 @@ def check_data_fractions_integrity(lower_bound, upper_bound, chuncks):
 
 def get_args():
     """
-    DOCUMENTATION
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -219,7 +218,6 @@ def get_args():
 
 if __name__ == "__main__":
     """
-    DOCUMENTATION
     """
     logging.basicConfig(level=logging.INFO)
     logger.info('Call to performance_evaluation module.')
