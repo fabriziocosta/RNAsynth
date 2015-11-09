@@ -76,8 +76,12 @@ class Initializer():
                  instance_score_threshold=0,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
+                 # eden vectorizer
                  vectorizer_complexity=2,
-                 max_num_graphs_per_seq=3,
+                 r=None,
+                 d=None,
+                 min_r=0,
+                 min_d=0,
                  n_jobs=-1,
                  cv=3,
                  n_iter_search=1,
@@ -134,7 +138,12 @@ class Initializer():
                                           split_components=split_components)
 
         self.estimator = SGDClassifier()
-        self.vectorizer = Vectorizer()
+        self.vectorizer = Vectorizer(complexity=vectorizer_complexity,
+                                     r=r,
+                                     d=d,
+                                     min_r=min_r,
+                                     min_d=min_d)
+
         self.synthesizer = RNASynth(estimator=self.estimator,
                                     vectorizer=self.vectorizer,
                                     designer=self.designer,
@@ -199,10 +208,6 @@ class RNASynth():
 
     vectorizer_complexity : int (default 2)
             eden.graph.Vectorizer parameter.
-
-
-    max_num_graphs_per_seq: int (default 3)
-            eden.converter.rna.rnashapes.rnashapes_to_eden parameter.
     """
 
     def __init__(self,
