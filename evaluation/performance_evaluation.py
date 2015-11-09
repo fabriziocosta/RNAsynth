@@ -10,8 +10,7 @@ import numpy as np
 
 from eden.util import random_bipartition_iter
 
-# from rna_design.rna_synthesizer import RNASynth
-from rnasynth.rna_synthesizer_n import RNASynthesizerInitializer
+from rnasynth.rna_synthesizer import RNASynthesizerInitializer
 
 
 from util.dataset import split_to_train_and_test
