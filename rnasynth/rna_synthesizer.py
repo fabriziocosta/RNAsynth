@@ -9,10 +9,11 @@ from sklearn.linear_model import SGDClassifier
 
 from eden.converter.fasta import fasta_to_sequence
 from eden.converter.rna.rnashapes import rnashapes_to_eden
-from eden.util import fit
+from eden.util import fit as optimized_estimator_fit
 from eden.graph import Vectorizer
 from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
+from eden.converter.rna.rnafold import rnafold_to_eden
 
 from rnasynth.constraint_extractor import ConstraintExtractor
 from rnasynth.rna_designer import AntaRNAv117Designer
@@ -137,7 +138,8 @@ class RNASynthesizerInitializer():
                                           max_num=max_num,
                                           split_components=split_components)
 
-        self.estimator = SGDClassifier(average=True, class_weight='auto', shuffle=True)
+        self.estimator = SGDClassifier(
+            average=True, class_weight='auto', shuffle=True)
         self.vectorizer = Vectorizer(complexity=vectorizer_complexity,
                                      r=r,
                                      d=d,
@@ -175,9 +177,12 @@ class PreProcessor():
         self.max_num = max_num
         self.split_components = split_components
 
-    def transform(self, iterable_seq=None):
-        graphs = rnashapes_to_eden(iterable_seq, shape_type=self.shape_type, energy_range=self.energy_range,
-                                   max_num=self.max_num, split_components=self.split_components)
+    def transform(self, iterable_seq=None, mfe=False):
+        if mfe is False:
+            graphs = rnashapes_to_eden(iterable_seq, shape_type=self.shape_type, energy_range=self.energy_range,
+                                       max_num=self.max_num, split_components=self.split_components)
+        else:
+            graphs = rnafold_to_eden(iterable_seq)
         return graphs
 
 
@@ -188,26 +193,6 @@ class RNASynth():
     Larger help explanation.
     Multi-line...
 
-    Parameters
-    ----------
-    n_synthesized_sequences_per_seed_sequence : int (default 2)
-            Option for setting the number of synthesized sequences per constraint.
-
-
-    instance_score_threshold : int (default 0)
-            Predicted score threshold for filtering synthesized sequences.
-
-
-    shuffle_order : int (default 2)
-            Eden.modifier.seq.seq_to_seq parameter.
-
-
-    negative_shuffle_ratio : int (default 2)
-            Number of negative sample sequences generated for each positive sample.
-
-
-    vectorizer_complexity : int (default 2)
-            eden.graph.Vectorizer parameter.
     """
 
     def __init__(self,
@@ -217,7 +202,7 @@ class RNASynth():
                  designer=AntaRNAv117Designer(),
                  constraint_extractor=ConstraintExtractor(),
                  n_synthesized_sequences_per_seed_sequence=3,
-                 instance_score_threshold=0,
+                 instance_score_threshold=1,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
                  n_jobs=-1,
@@ -261,18 +246,17 @@ class RNASynth():
             iterable_seq=iterable_seq,
             negative_shuffle_ratio=self._negative_shuffle_ratio,
             shuffle_order=self._shuffle_order)
-        self.estimator = fit(iterable_graph,
-                             iterable_graph_neg,
-                             self.vectorizer,
-                             n_jobs=self._n_jobs,
-                             cv=self._cv,
-                             n_iter_search=self._n_iter_search)
+        self.estimator = optimized_estimator_fit(iterable_graph,
+                                                 iterable_graph_neg,
+                                                 self.vectorizer,
+                                                 n_jobs=self._n_jobs,
+                                                 cv=self._cv,
+                                                 n_iter_search=self._n_iter_search)
         return self
 
     def __design(self, iterable_graph):
         iterable_graph = self.vectorizer.annotate(
             iterable_graph, estimator=self.estimator)
-
         iterable = self.constraint_extractor.extract_constraints(
             iterable_graph)
         for (dot_bracket, seq_constraint, gc_content, fasta_id) in iterable:
@@ -282,27 +266,31 @@ class RNASynth():
                 header = fasta_id + '_' + str(count)
                 yield header, sequence
 
-    def __filter(self, iterable_seq):
-        iter1, iter2 = tee(iterable_seq)
-        iterable_graph = self.pre_processor.transform(iter1)
-        predictions = self.vectorizer.predict(iterable_graph, self.estimator)
+    def __filter_graphs(self, iterable_graphs):
+        iterable_graphs, iterable_graphs_ = tee(iterable_graphs)
+        predictions = self.vectorizer.predict(iterable_graphs, self.estimator)
+        for prediction, graph in izip(predictions, iterable_graphs_):
+            if prediction > self._instance_score_threshold:
+                yield graph
 
-        for prediction, seq in izip(predictions, iter2):
+    def __filter_seqs(self, iterable_seq):
+        iterable_seq, iterable_seq_ = tee(iterable_seq)
+        iterable_graph = self.pre_processor.transform(iterable_seq, mfe=True)
+        predictions = self.vectorizer.predict(iterable_graph, self.estimator)
+        for prediction, seq in izip(predictions, iterable_seq_):
             if prediction > self._instance_score_threshold:
                 yield seq
 
     def sample(self, iterable_seq):
-        iterable_graph = self.pre_processor.transform(iterable_seq)
-        iterable_seq = self.__design(iterable_graph)
-        iterable_seq = self.__filter(iterable_seq)
-
+        iterable_graphs = self.pre_processor.transform(iterable_seq, mfe=False)
+        iterable_graphs = self.__filter_graphs(iterable_graphs)
+        iterable_seq = self.__design(iterable_graphs)
+        iterable_seq = self.__filter_seqs(iterable_seq)
         return iterable_seq
 
     def fit_sample(self, iterable_seq):
         iterable_seq, iterable_seq_ = tee(iterable_seq)
-        self.fit(iterable_seq)
-        iterable_seq = self.sample(iterable_seq_)
-
+        iterable_seq = self.fit(iterable_seq).sample(iterable_seq_)
         return iterable_seq
 
 

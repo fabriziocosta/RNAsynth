@@ -70,7 +70,6 @@ class AntaRNAv109Designer(AbstractDesigner):
         self.params['seed'] = seed
         logger.info('Instantiated an instance of AntaRNAv109Designer.')
 
-    # dot_bracket_constraint_string, sequence_constraint_string):
     def design(self, constraints=None):
         dot_bracket_constraint_string = constraints[0]
         sequence_constraint_string = constraints[1]
@@ -164,13 +163,12 @@ class AntaRNAv117Designer(AbstractDesigner):
             logger.info('%s' % self.designer.params.error)
             sys.exit()
 
-        logger.info('Instantiated an instance of AntaRNAv117Designer.')
+        logger.debug('Instantiated an instance of AntaRNAv117Designer.')
 
     def design(self, constraints=None):
         """
         DOCUMENTATION
         """
-        # check first
         self.designer.params.Cstr = constraints[0]
         self.designer.params.Cseq = constraints[1]
         if type(constraints[2]) == list:
@@ -195,7 +193,3 @@ if __name__ == "__main__":
 
     r = designer.design(constraints=constraints)
     print r
-
-    # designer2 = AntaRNAv109Designer()
-    # result = designer2.design(constraints=("...(((...)))...((...))...",
-    #                                        "NNNNNNNNNNNNNNNNNNNNNNNNU", 0.3))
