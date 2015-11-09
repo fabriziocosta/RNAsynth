@@ -11,7 +11,7 @@ import numpy as np
 from eden.util import random_bipartition_iter
 
 # from rna_design.rna_synthesizer import RNASynth
-from rna_design.rna_synthesizer_n import Initializer
+from rnasynth.rna_synthesizer_n import Initializer
 
 from util.dataset import split_to_train_and_test
 from util.dataset import fit_evaluate

@@ -14,8 +14,8 @@ from eden.graph import Vectorizer
 from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
 
-from rna_design.constraint_extractor import ConstraintExtractor
-from rna_designer import AntaRNAv117Designer
+from rnasynth.constraint_extractor import ConstraintExtractor
+from rnasynth.rna_designer import AntaRNAv117Designer
 
 
 logger = logging.getLogger(__name__)
