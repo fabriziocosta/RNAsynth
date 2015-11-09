@@ -11,7 +11,8 @@ import numpy as np
 from eden.util import random_bipartition_iter
 
 # from rna_design.rna_synthesizer import RNASynth
-from rnasynth.rna_synthesizer_n import Initializer
+from rnasynth.rna_synthesizer_n import RNASynthesizerInitializer
+
 
 from util.dataset import split_to_train_and_test
 from util.dataset import fit_evaluate
@@ -135,8 +136,7 @@ def learning_curve(params):
         iter_test, iter_test_ = tee(iter_test)
 
         # Create an instance of the synthesizer object.
-        initializer = Initializer()
-        synthesizer = initializer.init_synthesizer()
+        synthesizer = RNASynthesizerInitializer().synthesizer
         mroct, maprt, mrocs, maprs, elapsed_time = batch_performance_evaluation(params,
                                                                                 synthesizer=synthesizer,
                                                                                 iter_train=iter_train_,

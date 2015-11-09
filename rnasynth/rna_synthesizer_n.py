@@ -21,7 +21,7 @@ from rnasynth.rna_designer import AntaRNAv117Designer
 logger = logging.getLogger(__name__)
 
 
-class Initializer():
+class RNASynthesizerInitializer():
 
     def __init__(self,
                  # constraint_extractor params
@@ -137,7 +137,7 @@ class Initializer():
                                           max_num=max_num,
                                           split_components=split_components)
 
-        self.estimator = SGDClassifier()
+        self.estimator = SGDClassifier(average=True, class_weight='auto', shuffle=True)
         self.vectorizer = Vectorizer(complexity=vectorizer_complexity,
                                      r=r,
                                      d=d,
@@ -314,8 +314,7 @@ if __name__ == "__main__":
     rfam_id = 'RF01685'
     iterable_seq = fasta_to_sequence(
         'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
-    initializer = Initializer()
-    synthesizer = initializer.init_synthesizer()
+    synthesizer = RNASynthesizerInitializer().synthesizer
     iter_seq = synthesizer.fit_sample(iterable_seq)
     for item in iter_seq:
         print item

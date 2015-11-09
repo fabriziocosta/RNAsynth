@@ -26,6 +26,7 @@ class ConstraintExtractor():
             Minimum number of adjacent backbones which can form a secondary structure constraint.
 
     """
+
     def __init__(self,
                  importance_threshold_sequence_constraint=0,
                  min_size_connected_component_sequence_constraint=1,
@@ -47,19 +48,19 @@ class ConstraintExtractor():
         for g in graphs:
             fasta_id = g.graph['id']
             gc_content = self._compute_gc_content(g)
-            cseq = self._extract_constraint_string(
+            cseq = self._extract_sequence_constraints(
                 g, self.importance_threshold_sequence_constraint, self.min_size_connected_component_sequence_constraint)
-            struct = self._extract_dot_struct(
+            struct = self. _extract_structure_constraints(
                 g, self.importance_threshold_structure_constraint, self.min_size_connected_component_structure_constraint,
                 self.min_size_connected_component_unpaired_structure_constraint)
 
             yield struct, cseq, gc_content, fasta_id
 
-    def _extract_constraint_string(self,
-                                   graph,
-                                   importance_threshold_sequence_constraint,
-                                   min_size_connected_component_sequence_constraint,
-                                   padding='N'):
+    def _extract_sequence_constraints(self,
+                                      graph,
+                                      importance_threshold_sequence_constraint,
+                                      min_size_connected_component_sequence_constraint,
+                                      padding='N'):
         """
         Generates a sequence constraint string from an annotated Networkx graph.
         Adjacent nodes with the connectivity above the threshold show up
@@ -73,11 +74,11 @@ class ConstraintExtractor():
         cstr = self._dict_to_string(cstr_dict)
         return cstr
 
-    def _extract_dot_struct(self,
-                            graph,
-                            importance_threshold_structure_constraint,
-                            min_size_connected_component_structure_constraint,
-                            min_size_connected_component_unpaired_structure_constraint):
+    def _extract_structure_constraints(self,
+                                       graph,
+                                       importance_threshold_structure_constraint,
+                                       min_size_connected_component_structure_constraint,
+                                       min_size_connected_component_unpaired_structure_constraint):
         """
         Generates a dot-bracket structure constraint string from an annotated Networkx graph.
         Base pairs above the importance threshold appear in the output string.
