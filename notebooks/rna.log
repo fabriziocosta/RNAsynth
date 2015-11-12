@@ -1,0 +1,55 @@
+2015-11-09 15:45:11,855 | INFO   | rnasynth.rna_designer | rna_designer.py |  167 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 15:45:11,857 | INFO   | rnasynth.rna_designer | rna_designer.py |  167 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 15:45:11,863 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  242 | Instantiated an RNASynth object.
+2015-11-09 15:45:11,868 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  243 | {'designer': <rnasynth.rna_designer.AntaRNAv117Designer object at 0x7f239ff0ca50>, 'constraint_extractor': <rnasynth.constraint_extractor.ConstraintExtractor instance at 0x7f239ff12ea8>, '_n_jobs': -1, '_n_iter_search': 1, 'pre_processor': <rnasynth.rna_synthesizer.PreProcessor instance at 0x7f239ff12fc8>, '_shuffle_order': 2, 'estimator': SGDClassifier(alpha=0.0001, average=True, class_weight='auto', epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False), '_n_synthesized_sequences_per_seed_sequence': 3, '_instance_score_threshold': 0, '_cv': 3, '_negative_shuffle_ratio': 2, 'vectorizer': graph.Vectorizer( r = 2, d = 2, min_r = 0, min_d = 0, nbits = 20, normalization = True, inner_normalization = True, n_discretization_levels = 1, min_n_discretization_levels = 2 )}
+2015-11-09 15:45:11,877 | INFO   | rnasynth.rna_synthesizer | rna_synthesizer.py |  159 | Created a RNASynthesizer object.
+2015-11-09 15:45:11,980 | INFO   | requests.packages.urllib3.connectionpool | connectionpool.py |  203 | Starting new HTTP connection (1): rfam.xfam.org
+2015-11-09 15:47:19,449 | DEBUG  | requests.packages.urllib3.connectionpool | connectionpool.py |  383 | "GET /family/RF01685/alignment?acc=RF01685&format=fastau&download=0 HTTP/1.1" 200 11092
+2015-11-09 15:47:36,437 | DEBUG  |  eden.util | __init__.py |  275 | Positive data: Instances: 30 ; Features: 1048577 with an avg of 733 features per instance
+2015-11-09 15:47:36,453 | DEBUG  |  eden.util | __init__.py |  276 | Negative data: Instances: 60 ; Features: 1048577 with an avg of 740 features per instance
+2015-11-09 15:47:36,622 | DEBUG  |  eden.util | __init__.py |  289 | Elapsed time: 144.7 secs
+2015-11-09 17:11:09,716 | INFO   | rnasynth.rna_designer | rna_designer.py |  167 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 17:11:09,720 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  242 | Instantiated an RNASynth object.
+2015-11-09 17:11:09,726 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  243 | {'designer': <rnasynth.rna_designer.AntaRNAv117Designer object at 0x7f239dc89590>, 'constraint_extractor': <rnasynth.constraint_extractor.ConstraintExtractor instance at 0x7f239dc60248>, '_n_jobs': -1, '_n_iter_search': 1, 'pre_processor': <rnasynth.rna_synthesizer.PreProcessor instance at 0x7f239fde4a28>, '_shuffle_order': 2, 'estimator': SGDClassifier(alpha=0.0001, average=True, class_weight='auto', epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False), '_n_synthesized_sequences_per_seed_sequence': 3, '_instance_score_threshold': 0, '_cv': 3, '_negative_shuffle_ratio': 2, 'vectorizer': graph.Vectorizer( r = 2, d = 2, min_r = 0, min_d = 0, nbits = 20, normalization = True, inner_normalization = True, n_discretization_levels = 1, min_n_discretization_levels = 2 )}
+2015-11-09 17:11:09,730 | INFO   | rnasynth.rna_synthesizer | rna_synthesizer.py |  159 | Created a RNASynthesizer object.
+2015-11-09 17:11:09,740 | INFO   | requests.packages.urllib3.connectionpool | connectionpool.py |  203 | Starting new HTTP connection (1): rfam.xfam.org
+2015-11-09 17:11:09,894 | DEBUG  | requests.packages.urllib3.connectionpool | connectionpool.py |  383 | "GET /family/RF01685/alignment?acc=RF01685&format=fastau&download=0 HTTP/1.1" 200 11092
+2015-11-09 17:11:27,869 | DEBUG  |  eden.util | __init__.py |  275 | Positive data: Instances: 30 ; Features: 1048577 with an avg of 733 features per instance
+2015-11-09 17:11:27,887 | DEBUG  |  eden.util | __init__.py |  276 | Negative data: Instances: 60 ; Features: 1048577 with an avg of 742 features per instance
+2015-11-09 17:11:28,038 | DEBUG  |  eden.util | __init__.py |  289 | Elapsed time: 18.3 secs
+2015-11-09 17:31:06,307 | DEBUG  | rnasynth.rna_designer | rna_designer.py |  166 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 17:31:06,310 | DEBUG  | rnasynth.rna_designer | rna_designer.py |  166 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 17:31:06,313 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  227 | Instantiated an RNASynth object.
+2015-11-09 17:31:06,314 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  228 | {'designer': <rnasynth.rna_designer.AntaRNAv117Designer object at 0x7ff42618bb50>, 'constraint_extractor': <rnasynth.constraint_extractor.ConstraintExtractor instance at 0x7ff42619a488>, '_n_jobs': -1, '_n_iter_search': 1, 'pre_processor': <rnasynth.rna_synthesizer.PreProcessor instance at 0x7ff42619a5f0>, '_shuffle_order': 2, 'estimator': SGDClassifier(alpha=0.0001, average=True, class_weight='auto', epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False), '_n_synthesized_sequences_per_seed_sequence': 3, '_instance_score_threshold': 0, '_cv': 3, '_negative_shuffle_ratio': 2, 'vectorizer': graph.Vectorizer( r = 2, d = 2, min_r = 0, min_d = 0, nbits = 20, normalization = True, inner_normalization = True, n_discretization_levels = 1, min_n_discretization_levels = 2 )}
+2015-11-09 17:31:06,318 | INFO   | rnasynth.rna_synthesizer | rna_synthesizer.py |  161 | Created a RNASynthesizer object.
+2015-11-09 17:31:06,377 | INFO   | requests.packages.urllib3.connectionpool | connectionpool.py |  203 | Starting new HTTP connection (1): rfam.xfam.org
+2015-11-09 17:31:06,535 | DEBUG  | requests.packages.urllib3.connectionpool | connectionpool.py |  383 | "GET /family/RF01685/alignment?acc=RF01685&format=fastau&download=0 HTTP/1.1" 200 11092
+2015-11-09 17:31:23,445 | DEBUG  |  eden.util | __init__.py |  275 | Positive data: Instances: 30 ; Features: 1048577 with an avg of 733 features per instance
+2015-11-09 17:31:23,453 | DEBUG  |  eden.util | __init__.py |  276 | Negative data: Instances: 60 ; Features: 1048577 with an avg of 744 features per instance
+2015-11-09 17:31:23,620 | DEBUG  |  eden.util | __init__.py |  289 | Elapsed time: 17.3 secs
+2015-11-09 17:35:54,005 | DEBUG  | rnasynth.rna_designer | rna_designer.py |  166 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 17:35:54,005 | DEBUG  | rnasynth.rna_designer | rna_designer.py |  166 | Instantiated an instance of AntaRNAv117Designer.
+2015-11-09 17:35:54,006 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  227 | Instantiated an RNASynth object.
+2015-11-09 17:35:54,007 | DEBUG  | rnasynth.rna_synthesizer | rna_synthesizer.py |  228 | {'designer': <rnasynth.rna_designer.AntaRNAv117Designer object at 0x7fd46acebc50>, 'constraint_extractor': <rnasynth.constraint_extractor.ConstraintExtractor instance at 0x7fd46ad01170>, '_n_jobs': -1, '_n_iter_search': 1, 'pre_processor': <rnasynth.rna_synthesizer.PreProcessor instance at 0x7fd46ad01248>, '_shuffle_order': 2, 'estimator': SGDClassifier(alpha=0.0001, average=True, class_weight='auto', epsilon=0.1,
+       eta0=0.0, fit_intercept=True, l1_ratio=0.15,
+       learning_rate='optimal', loss='hinge', n_iter=5, n_jobs=1,
+       penalty='l2', power_t=0.5, random_state=None, shuffle=True,
+       verbose=0, warm_start=False), '_n_synthesized_sequences_per_seed_sequence': 3, '_instance_score_threshold': 0, '_cv': 3, '_negative_shuffle_ratio': 2, 'vectorizer': graph.Vectorizer( r = 2, d = 2, min_r = 0, min_d = 0, nbits = 20, normalization = True, inner_normalization = True, n_discretization_levels = 1, min_n_discretization_levels = 2 )}
+2015-11-09 17:35:54,009 | INFO   | rnasynth.rna_synthesizer | rna_synthesizer.py |  161 | Created a RNASynthesizer object.
+2015-11-09 17:35:54,062 | INFO   | requests.packages.urllib3.connectionpool | connectionpool.py |  203 | Starting new HTTP connection (1): rfam.xfam.org
+2015-11-09 17:35:54,199 | DEBUG  | requests.packages.urllib3.connectionpool | connectionpool.py |  383 | "GET /family/RF01685/alignment?acc=RF01685&format=fastau&download=0 HTTP/1.1" 200 11092
+2015-11-09 17:36:11,449 | DEBUG  |  eden.util | __init__.py |  275 | Positive data: Instances: 30 ; Features: 1048577 with an avg of 733 features per instance
+2015-11-09 17:36:11,450 | DEBUG  |  eden.util | __init__.py |  276 | Negative data: Instances: 60 ; Features: 1048577 with an avg of 744 features per instance
+2015-11-09 17:36:11,598 | DEBUG  |  eden.util | __init__.py |  289 | Elapsed time: 17.6 secs
