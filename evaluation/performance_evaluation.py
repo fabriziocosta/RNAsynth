@@ -10,7 +10,8 @@ import numpy as np
 
 from eden.util import random_bipartition_iter
 
-from rna_design.rna_synthesizer import RNASynth
+from rnasynth.rna_synthesizer import RNASynthesizerInitializer
+
 
 from util.dataset import split_to_train_and_test
 from util.dataset import fit_evaluate
@@ -19,16 +20,14 @@ from util.dataset import fit_evaluate
 logger = logging.getLogger(__name__)
 
 
-def performance_evaluation(params, iter_train=None, iter_test=None):
+def performance_evaluation(params, synthesizer=None, iter_train=None, iter_test=None):
     """
-    DOCUMENTATION
     """
     shuffle_order = params['shuffle_order']
     negative_shuffle_ratio = params['negative_shuffle_ratio']
     vectorizer_complexity = params['vectorizer_complexity']
 
-    # Copy training sample iterable for sequence synthesis and mixed samples
-    # set production.
+    # Copy training sample iterable for sequence synthesis and producing mixed sample set.
     iter_train, iter_train_syn, iter_seq_true = tee(iter_train, 3)
 
     # Copy test sample iterable used for evaluation.
@@ -39,9 +38,6 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
     roc_t, apr_t = fit_evaluate(iterable_train=iter_train, iterable_test=iter_test,
                                 negative_shuffle_ratio=negative_shuffle_ratio,
                                 shuffle_order=shuffle_order, vectorizer_complexity=vectorizer_complexity)
-
-    # Create an RNASynth object.
-    synthesizer = RNASynth(params)
 
     # Produce synthesied sequences generator.
     iterable_seq_syn = synthesizer.fit_sample(iter_train_syn)
@@ -59,9 +55,8 @@ def performance_evaluation(params, iter_train=None, iter_test=None):
     return roc_t, apr_t, roc_s, apr_s
 
 
-def batch_performance_evaluation(params, iter_train=None, iter_test=None, relative_size=None):
+def batch_performance_evaluation(params, synthesizer=None, iter_train=None, iter_test=None, relative_size=None):
     """
-    DOCUMENTATION
     """
     n_experiment_repetitions = params['n_experiment_repetitions']
 
@@ -87,7 +82,7 @@ def batch_performance_evaluation(params, iter_train=None, iter_test=None, relati
             iter_test_, relative_size=relative_size)
 
         roc_t, apr_t, roc_s, apr_s = performance_evaluation(
-            params, iter_train=iter_train_, iter_test=iter_test_)
+            params, synthesizer=synthesizer, iter_train=iter_train_, iter_test=iter_test_)
 
         # Update experiment performance measures.
         e_roc_t.append(roc_t)
@@ -102,10 +97,8 @@ def batch_performance_evaluation(params, iter_train=None, iter_test=None, relati
 
 def learning_curve(params):
     """
-    DOCUMENTATION
     """
     rfam_id = params['rfam_id']
-    # log_file = params['log_file']
     train_to_test_split_ratio = params['train_to_test_split_ratio']
 
     data_fraction_lower_bound = params['data_fraction_lower_bound']
@@ -138,7 +131,10 @@ def learning_curve(params):
         iter_train, iter_train_ = tee(iter_train)
         iter_test, iter_test_ = tee(iter_test)
 
+        # Create an instance of the synthesizer object.
+        synthesizer = RNASynthesizerInitializer().synthesizer
         mroct, maprt, mrocs, maprs, elapsed_time = batch_performance_evaluation(params,
+                                                                                synthesizer=synthesizer,
                                                                                 iter_train=iter_train_,
                                                                                 iter_test=iter_test_,
                                                                                 relative_size=data_fraction)
@@ -171,29 +167,12 @@ def check_data_fractions_integrity(lower_bound, upper_bound, chuncks):
 
 def get_args():
     """
-    DOCUMENTATION
     """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
-    parser.add_argument('--log_file', '-l', type=str,
-                        default='~/Synthesis.log', help='experiment log file')
     parser.add_argument('--antaRNA_params', '-p', type=str,
                         default='./antaRNA.ini', help='antaRNA initialization file')
-    parser.add_argument('--importance_threshold_sequence_constraint',
-                        '-a', type=int, default=0, help='nucleotide selection threshold')
-    parser.add_argument('--min_size_connected_component_sequence_constraint',
-                        '-b', type=int, default=1, help='nucleotide minimum adjacency')
-    parser.add_argument('--importance_threshold_structure_constraint',
-                        '-c', type=int, default=0, help='basepair selection threshold')
-    parser.add_argument('--min_size_connected_component_structure_constraint',
-                        '-d', type=int, default=1, help='basepairs minimum adjacency')
-    parser.add_argument('--min_size_connected_component_unpaired_structure_constraint',
-                        '-e', type=int, default=1, help='unpaired nucleotides minimum adjacency')
-    parser.add_argument('--n_synthesized_sequences_per_seed_sequence', '-n',
-                        type=int, default=1, help='number of synthesized sequences per constraint')
-    parser.add_argument('--instance_score_threshold', '-f',
-                        type=int, default=0, help='filtering threshold')
     parser.add_argument('--n_experiment_repetitions', '-j',
                         type=int, default=10, help='runs per experiment')
     parser.add_argument('--train_to_test_split_ratio', '-r',
@@ -219,7 +198,6 @@ def get_args():
 
 if __name__ == "__main__":
     """
-    DOCUMENTATION
     """
     logging.basicConfig(level=logging.INFO)
     logger.info('Call to performance_evaluation module.')

@@ -42,7 +42,7 @@ class AntaRNAv109Designer(AbstractDesigner):
                  temperature=37.0,
                  paramFile='',
                  return_mod=True,
-                 seed='none',
+                 seed='none'
                  ):
         self.params = {}
         self.params['tGC'] = tGC
@@ -70,7 +70,6 @@ class AntaRNAv109Designer(AbstractDesigner):
         self.params['seed'] = seed
         logger.info('Instantiated an instance of AntaRNAv109Designer.')
 
-    # dot_bracket_constraint_string, sequence_constraint_string):
     def design(self, constraints=None):
         dot_bracket_constraint_string = constraints[0]
         sequence_constraint_string = constraints[1]
@@ -164,20 +163,22 @@ class AntaRNAv117Designer(AbstractDesigner):
             logger.info('%s' % self.designer.params.error)
             sys.exit()
 
-        logger.info('Instantiated an instance of AntaRNAv117Designer.')
+        logger.debug('Instantiated an instance of AntaRNAv117Designer.')
 
     def design(self, constraints=None):
         """
         DOCUMENTATION
         """
-        # check first
         self.designer.params.Cstr = constraints[0]
         self.designer.params.Cseq = constraints[1]
-        self.designer.params.tGC = constraints[2]
+        if type(constraints[2]) == list:
+            self.designer.params.tGC = constraints[2]
+        else:
+            self.designer.params.tGC = [constraints[2]]
         self.designer.params.check()
         self.designer.swarm()
         result = ''
-        for r in designer.designer.result:
+        for r in self.designer.result:
             result = r[1].split(":")[1]
         return result
 
@@ -191,7 +192,4 @@ if __name__ == "__main__":
     designer = AntaRNAv117Designer()
 
     r = designer.design(constraints=constraints)
-
-    designer2 = AntaRNAv109Designer()
-    result = designer2.design(constraints=("...(((...)))...((...))...",
-                                           "NNNNNNNNNNNNNNNNNNNNNNNNU", 0.3))
+    print r
