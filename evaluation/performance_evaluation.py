@@ -13,8 +13,8 @@ from eden.util import random_bipartition_iter
 from rnasynth.rna_synthesizer import RNASynthesizerInitializer
 
 
-from util.dataset import split_to_train_and_test
-from util.dataset import fit_evaluate
+from dataset import split_to_train_and_test
+from dataset import fit_evaluate
 
 
 logger = logging.getLogger(__name__)
