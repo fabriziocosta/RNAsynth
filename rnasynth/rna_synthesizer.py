@@ -22,7 +22,7 @@ from rnasynth.rna_designer import AntaRNAv117Designer
 logger = logging.getLogger(__name__)
 
 
-class RNASynthesizerInitializer():
+class RNASynthesizerInitializer(object):
 
     """ Main class for instantiating an instance of the RNASynth class.
 
@@ -217,7 +217,6 @@ class RNASynthesizerInitializer():
                  importance_threshold_structure_constraint=0,
                  min_size_connected_component_structure_constraint=1,
                  min_size_connected_component_unpaired_structure_constraint=1,
-                 # antarna_designer_v117 params
                  Cstr="",
                  Cseq="",
                  tGC=[],
@@ -254,16 +253,13 @@ class RNASynthesizerInitializer():
                  Cseqweight=1.0,
                  omega=2.23,
                  time=600,
-                 # pre_process params
                  shape_type=5,
                  energy_range=35,
                  max_num=3,
                  split_components=True,
-                 # rna_synthesizer params
                  instance_score_threshold=0,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
-                 # eden vectorizer
                  vectorizer_complexity=2,
                  r=None,
                  d=None,
@@ -272,7 +268,7 @@ class RNASynthesizerInitializer():
                  n_jobs=-1,
                  cv=3,
                  n_iter_search=1,
-                 n_synthesized_sequences_per_seed_sequence=3
+                 n_synthesized_seqs_per_seed_seq=3
                  ):
 
         self.constraint_extractor = ConstraintExtractor(
@@ -339,7 +335,7 @@ class RNASynthesizerInitializer():
                                     designer=self.designer,
                                     pre_processor=self.pre_processor,
                                     constraint_extractor=self.constraint_extractor,
-                                    n_synthesized_sequences_per_seed_sequence=n_synthesized_sequences_per_seed_sequence,
+                                    n_synthesized_seqs_per_seed_seq=n_synthesized_seqs_per_seed_seq,
                                     instance_score_threshold=instance_score_threshold,
                                     shuffle_order=shuffle_order,
                                     negative_shuffle_ratio=negative_shuffle_ratio,
@@ -352,7 +348,7 @@ class RNASynthesizerInitializer():
         return self.synthesizer
 
 
-class PreProcessor():
+class PreProcessor(object):
 
     def __init__(self,
                  shape_type=5,
@@ -366,16 +362,19 @@ class PreProcessor():
         self.split_components = split_components
         logger.debug('Created a PreProcessor object.')
 
-    def transform(self, iterable_seq=None, mfe=False):
+    def transform(self, seqs=None, mfe=False):
         if mfe is False:
-            graphs = rnashapes_to_eden(iterable_seq, shape_type=self.shape_type, energy_range=self.energy_range,
-                                       max_num=self.max_num, split_components=self.split_components)
+            graphs = rnashapes_to_eden(seqs,
+                                       shape_type=self.shape_type,
+                                       energy_range=self.energy_range,
+                                       max_num=self.max_num,
+                                       split_components=self.split_components)
         else:
-            graphs = rnafold_to_eden(iterable_seq)
+            graphs = rnafold_to_eden(seqs)
         return graphs
 
 
-class RNASynth():
+class RNASynth(object):
 
     def __init__(self,
                  estimator=SGDClassifier(),
@@ -383,7 +382,7 @@ class RNASynth():
                  pre_processor=PreProcessor(),
                  designer=AntaRNAv117Designer(),
                  constraint_extractor=ConstraintExtractor(),
-                 n_synthesized_sequences_per_seed_sequence=3,
+                 n_synthesized_seqs_per_seed_seq=3,
                  instance_score_threshold=1,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
@@ -398,7 +397,7 @@ class RNASynth():
         self.pre_processor = pre_processor
         self.constraint_extractor = constraint_extractor
 
-        self._n_synthesized_sequences_per_seed_sequence = n_synthesized_sequences_per_seed_sequence
+        self._n_synthesized_seqs_per_seed_seq = n_synthesized_seqs_per_seed_seq
         self._instance_score_threshold = instance_score_threshold
         self._shuffle_order = shuffle_order
         self._negative_shuffle_ratio = negative_shuffle_ratio
@@ -415,69 +414,69 @@ class RNASynth():
         obj_str += 'shuffle_order: %d\n' % self._shuffle_order
         return obj_str
 
-    def _binary_classification_setup(self, iterable_seq=None, negative_shuffle_ratio=None, shuffle_order=None):
-        iter1, iter2 = tee(iterable_seq)
-        iterable_graph = self.pre_processor.transform(iter1)
-        iter3 = seq_to_seq(iter2, modifier=shuffle_modifier,
-                           times=negative_shuffle_ratio, order=shuffle_order)
-        iterable_graph_neg = self.pre_processor.transform(iter3)
-        return iterable_graph, iterable_graph_neg
+    def _binary_classification_setup(self,
+                                     seqs=None,
+                                     negative_shuffle_ratio=None,
+                                     shuffle_order=None):
+        seqs, seqs_ = tee(seqs)
+        graphs = self.pre_processor.transform(seqs)
+        seqs_neg = seq_to_seq(seqs_,
+                              modifier=shuffle_modifier,
+                              times=negative_shuffle_ratio,
+                              order=shuffle_order)
+        graphs_neg = self.pre_processor.transform(seqs_neg)
+        return graphs, graphs_neg
 
-    def fit(self, iterable_seq):
-        iterable_graph, iterable_graph_neg = self._binary_classification_setup(
-            iterable_seq=iterable_seq,
+    def fit(self, seqs):
+        graphs, graphs_neg = self._binary_classification_setup(
+            seqs=seqs,
             negative_shuffle_ratio=self._negative_shuffle_ratio,
             shuffle_order=self._shuffle_order)
-        self.estimator = optimized_estimator_fit(iterable_graph,
-                                                 iterable_graph_neg,
+        self.estimator = optimized_estimator_fit(graphs,
+                                                 graphs_neg,
                                                  self.vectorizer,
                                                  n_jobs=self._n_jobs,
                                                  cv=self._cv,
                                                  n_iter_search=self._n_iter_search)
         return self
 
-    def __design(self, iterable_graph):
-        iterable_graph = self.vectorizer.annotate(
-            iterable_graph, estimator=self.estimator)
-        iterable = self.constraint_extractor.extract_constraints(
-            iterable_graph)
+    def _design(self, graphs):
+        graphs = self.vectorizer.annotate(graphs, estimator=self.estimator)
+        iterable = self.constraint_extractor.extract_constraints(graphs)
         for (dot_bracket, seq_constraint, gc_content, fasta_id) in iterable:
-            for count in range(self._n_synthesized_sequences_per_seed_sequence):
-                sequence = self.designer.design(
-                    (dot_bracket, seq_constraint, gc_content))
-                header = fasta_id + '_' + str(count)
+            for count in range(self._n_synthesized_seqs_per_seed_seq):
+                sequence = self.designer.design((dot_bracket, seq_constraint, gc_content))
+                header = fasta_id + '_' + str(count) + '\n' +\
+                    dot_bracket.replace('A', '|') + '\n' +\
+                    seq_constraint.replace('N', '-')
                 yield header, sequence
 
-    def __filter_graphs(self, iterable_graphs):
-        iterable_graphs, iterable_graphs_ = tee(iterable_graphs)
-        predictions = self.vectorizer.predict(
-            iterable_graphs, self.estimator)
-        for prediction, graph in izip(predictions, iterable_graphs_):
+    def _filter_graphs(self, graphs):
+        graphs, graphs_ = tee(graphs)
+        predictions = self.vectorizer.predict(graphs, self.estimator)
+        for prediction, graph in izip(predictions, graphs_):
             if prediction > self._instance_score_threshold:
                 yield graph
 
-    def __filter_seqs(self, iterable_seq):
-        iterable_seq, iterable_seq_ = tee(iterable_seq)
-        iterable_graph = self.pre_processor.transform(
-            iterable_seq, mfe=True)
-        predictions = self.vectorizer.predict(
-            iterable_graph, self.estimator)
-        for prediction, seq in izip(predictions, iterable_seq_):
+    def _filter_seqs(self, seqs):
+        seqs, seqs_ = tee(seqs)
+        graphs = self.pre_processor.transform(seqs, mfe=True)
+        predictions = self.vectorizer.predict(graphs, self.estimator)
+        for prediction, seq in izip(predictions, seqs_):
             if prediction > self._instance_score_threshold:
                 yield seq
 
-    def sample(self, iterable_seq):
-        iterable_graphs = self.pre_processor.transform(
-            iterable_seq, mfe=False)
-        iterable_graphs = self.__filter_graphs(iterable_graphs)
-        iterable_seq = self.__design(iterable_graphs)
-        iterable_seq = self.__filter_seqs(iterable_seq)
-        return iterable_seq
+    def sample(self, seqs):
+        graphs = self.pre_processor.transform(seqs, mfe=False)
+        graphs = self._filter_graphs(graphs)
+        seqs = self._design(graphs)
+        seqs = self._filter_seqs(seqs)
+        return seqs
 
-    def fit_sample(self, iterable_seq):
-        iterable_seq, iterable_seq_ = tee(iterable_seq)
-        iterable_seq = self.fit(iterable_seq).sample(iterable_seq_)
-        return iterable_seq
+    def fit_sample(self, seqs):
+        seqs, seqs_ = tee(seqs)
+        seqs = self.fit(seqs).sample(seqs_)
+        return seqs
 
 
 if __name__ == "__main__":
@@ -489,6 +488,7 @@ if __name__ == "__main__":
     iterable_seq = fasta_to_sequence(
         'http://rfam.xfam.org/family/%s/alignment?acc=%s&format=fastau&download=0' % (rfam_id, rfam_id))
     synthesizer = RNASynthesizerInitializer().synthesizer
-    iter_seq = synthesizer.fit_sample(iterable_seq)
-    for item in iter_seq:
-        print item
+    synth_seqs = synthesizer.fit_sample(iterable_seq)
+    for header, seq in synth_seqs:
+        print header
+        print seq
