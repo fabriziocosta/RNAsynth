@@ -14,7 +14,6 @@ from eden.graph import Vectorizer
 from eden.modifier.seq import seq_to_seq
 from eden.modifier.seq import shuffle_modifier
 from eden.converter.rna.rnafold import rnafold_to_eden
-from eden.modifier.graph.structure import make_edge_type_into_nesting
 
 from rnasynth.constraint_extractor import ConstraintExtractor
 from rnasynth.rna_designer import AntaRNAv117Designer
@@ -71,7 +70,8 @@ class RNASynthesizerInitializer(object):
                  energy_range=35,
                  max_num=3,
                  split_components=True,
-                 instance_score_threshold=0,
+                 instance_score_threshold_in=0,
+                 instance_score_threshold_out=1,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
                  vectorizer_complexity=2,
@@ -148,7 +148,8 @@ class RNASynthesizerInitializer(object):
                                     pre_processor=self.pre_processor,
                                     constraint_extractor=self.constraint_extractor,
                                     n_synthesized_seqs_per_seed_seq=n_synthesized_seqs_per_seed_seq,
-                                    instance_score_threshold=instance_score_threshold,
+                                    instance_score_threshold_in=instance_score_threshold_in,
+                                    instance_score_threshold_out=instance_score_threshold_out,
                                     shuffle_order=shuffle_order,
                                     negative_shuffle_ratio=negative_shuffle_ratio,
                                     n_jobs=n_jobs,
@@ -182,7 +183,6 @@ class PreProcessor(object):
                                        split_components=self.split_components)
         else:
             graphs = rnafold_to_eden(seqs)
-        graphs = make_edge_type_into_nesting(graphs)
         return graphs
 
 
@@ -202,7 +202,8 @@ class RNASynth(object):
                  designer=AntaRNAv117Designer(),
                  constraint_extractor=ConstraintExtractor(),
                  n_synthesized_seqs_per_seed_seq=3,
-                 instance_score_threshold=1,
+                 instance_score_threshold_in=0,
+                 instance_score_threshold_out=1,
                  shuffle_order=2,
                  negative_shuffle_ratio=2,
                  n_jobs=-1,
@@ -217,7 +218,8 @@ class RNASynth(object):
         self.constraint_extractor = constraint_extractor
 
         self._n_synthesized_seqs_per_seed_seq = n_synthesized_seqs_per_seed_seq
-        self._instance_score_threshold = instance_score_threshold
+        self._instance_score_threshold_in = instance_score_threshold_in
+        self._instance_score_threshold_out = instance_score_threshold_out
         self._shuffle_order = shuffle_order
         self._negative_shuffle_ratio = negative_shuffle_ratio
         self._n_jobs = n_jobs
@@ -238,7 +240,7 @@ class RNASynth(object):
                                      negative_shuffle_ratio=None,
                                      shuffle_order=None):
         seqs, seqs_ = tee(seqs)
-        graphs = self.pre_processor.transform(seqs)
+        graphs = self.pre_processor.transform(seqs, mfe=False)
         seqs_neg = seq_to_seq(seqs_,
                               modifier=shuffle_modifier,
                               times=negative_shuffle_ratio,
@@ -266,7 +268,7 @@ class RNASynth(object):
             for count in range(self._n_synthesized_seqs_per_seed_seq):
                 sequence = self.designer.design((dot_bracket, seq_constraint, gc_content))
                 header = fasta_id + '_' + str(count) + '\n' +\
-                    dot_bracket.replace('A', '|') + '\n' +\
+                    dot_bracket.replace('A', '-') + '\n' +\
                     seq_constraint.replace('N', '-')
                 yield header, sequence
 
@@ -274,7 +276,7 @@ class RNASynth(object):
         graphs, graphs_ = tee(graphs)
         predictions = self.vectorizer.predict(graphs, self.estimator)
         for prediction, graph in izip(predictions, graphs_):
-            if prediction > self._instance_score_threshold:
+            if prediction > self._instance_score_threshold_in:
                 yield graph
 
     def _filter_seqs(self, seqs):
@@ -282,7 +284,7 @@ class RNASynth(object):
         graphs = self.pre_processor.transform(seqs, mfe=True)
         predictions = self.vectorizer.predict(graphs, self.estimator)
         for prediction, seq in izip(predictions, seqs_):
-            if prediction > self._instance_score_threshold:
+            if prediction > self._instance_score_threshold_out:
                 yield seq
 
     def sample(self, seqs):
@@ -296,6 +298,12 @@ class RNASynth(object):
         seqs, seqs_ = tee(seqs)
         seqs = self.fit(seqs).sample(seqs_)
         return seqs
+
+    def predict(self, seqs):
+        graphs = self.pre_processor.transform(seqs, mfe=True)
+        predictions = self.vectorizer.predict(graphs, self.estimator)
+        for prediction in predictions:
+            yield prediction
 
 
 if __name__ == "__main__":

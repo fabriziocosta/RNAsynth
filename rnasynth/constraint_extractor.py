@@ -9,22 +9,17 @@ class ConstraintExtractor():
     importance_threshold_sequence_constraint : int (default 1)
             Classification score threshold for identifying important nucleotides in a sequence.
 
-
     min_size_connected_component_sequence_constraint : int (default 3)
             Minimum number of adjacent important nucleotides which can form a sequence constraint.
-
 
     importance_threshold_structure_constraint : int (default 0)
             Classification score threshold for labeling important basepairs in a secondary structure.
 
-
     min_size_connected_component_structure_constraint : int (default 1)
             Minimum number of adjacent basepairs which can form a secondary structure constraint.
 
-
     min_size_connected_component_unpaired_structure_constraint : int (default 1)
             Minimum number of adjacent backbones which can form a secondary structure constraint.
-
     """
 
     def __init__(self,
@@ -32,8 +27,7 @@ class ConstraintExtractor():
                  min_size_connected_component_sequence_constraint=1,
                  importance_threshold_structure_constraint=0,
                  min_size_connected_component_structure_constraint=1,
-                 min_size_connected_component_unpaired_structure_constraint=1
-                 ):
+                 min_size_connected_component_unpaired_structure_constraint=1):
         self.importance_threshold_sequence_constraint = importance_threshold_sequence_constraint
         self.min_size_connected_component_sequence_constraint = min_size_connected_component_sequence_constraint
         self.importance_threshold_structure_constraint = importance_threshold_structure_constraint
@@ -42,17 +36,21 @@ class ConstraintExtractor():
 
     def extract_constraints(self, graphs):
         """
-        Generator function which yields sequence and structure constraint strings extracted from an annotated Networkx graph.
-        Accepts connectivity values and thresholds for sequence and structure constraints for the same graph separately .
+        Generator function which yields sequence and structure constraint strings extracted
+        from an annotated Networkx graph.
+        Accepts connectivity values and thresholds for sequence and structure constraints
+        for the same graph separately .
         """
         for g in graphs:
             fasta_id = g.graph['id']
             gc_content = self._compute_gc_content(g)
-            cseq = self._extract_sequence_constraints(
-                g, self.importance_threshold_sequence_constraint, self.min_size_connected_component_sequence_constraint)
-            struct = self. _extract_structure_constraints(
-                g, self.importance_threshold_structure_constraint, self.min_size_connected_component_structure_constraint,
-                self.min_size_connected_component_unpaired_structure_constraint)
+            cseq = self._extract_sequence_constraints(g,
+                                                      self.importance_threshold_sequence_constraint,
+                                                      self.min_size_connected_component_sequence_constraint)
+            struct = self. _extract_structure_constraints(g,
+                                                          self.importance_threshold_structure_constraint,
+                                                          self.min_size_connected_component_structure_constraint,
+                                                          self.min_size_connected_component_unpaired_structure_constraint)
 
             yield struct, cseq, gc_content, fasta_id
 
@@ -68,8 +66,10 @@ class ConstraintExtractor():
         Other nodes appear as padding in the output string.
         """
         cstr_dict = self._build_nodes_dict(graph)
-        for node in self._get_importance_list(graph, importance_threshold_sequence_constraint,
-                                              min_size_connected_component_sequence_constraint, importance=-1):
+        for node in self._get_importance_list(graph,
+                                              importance_threshold_sequence_constraint,
+                                              min_size_connected_component_sequence_constraint,
+                                              importance=-1):
             cstr_dict[node] = padding
         cstr = self._dict_to_string(cstr_dict)
         return cstr
@@ -87,8 +87,9 @@ class ConstraintExtractor():
         list_unpaired = self._find_unpaired_regions(
             graph, min_size_connected_component_unpaired_structure_constraint)
         dic_dot_str = self._build_generic_nodes_dict(graph)
-        importance_list = self._get_importance_list(
-            graph, importance_threshold_structure_constraint, min_size_connected_component_structure_constraint)
+        importance_list = self._get_importance_list(graph,
+                                                    importance_threshold_structure_constraint,
+                                                    min_size_connected_component_structure_constraint)
 
         for i, j in list_bpairs:
             if i in importance_list and j in importance_list:
@@ -162,8 +163,8 @@ class ConstraintExtractor():
         """
         Generates a list of important nodes in a graph.
         Importance is based on the importance number being greater than threshold,
-        and adjaceny factor being greater than or equal to radius.
-        Returns the complement list if importance=-1.
+        and adjacency factor being greater than or equal to radius.
+        Returns the complement list if importance = -1.
         """
         graph_c = graph.copy()
         nodes_list = []
@@ -202,7 +203,7 @@ class ConstraintExtractor():
     def _find_unpaired_regions(self, graph, adjacency):
         """
         Generates a list of unpaired nodes in a graph.
-        and adjaceny factor being greater than or equal to radius.
+        and adjacency factor being greater than or equal to radius.
         Returns a list containing regions in which the number of unpaired nodes
         is greater than "adjacency".
         """
