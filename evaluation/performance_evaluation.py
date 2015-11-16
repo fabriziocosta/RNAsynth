@@ -120,7 +120,7 @@ def learning_curve(params):
     data_fractions = list(np.linspace(
         data_fraction_lower_bound, data_fraction_upper_bound, data_fraction_chunks))
     print data_fractions
-
+    lc_start_time = time.time()
     logger.info('Starting RNA Synthesis experiment for %s ...' % rfam_id)
 
     iter_train, iter_test = split_to_train_and_test(
@@ -159,7 +159,8 @@ def learning_curve(params):
         roc_s.append(mrocs)
         apr_t.append(maprt)
         apr_s.append(maprs)
-
+	lc_time_lapse = time.time() - lc_start_time
+	logger.info('Learning curve experiment took %f seconds to complete:' % lc_time_lapse)
     return roc_t, roc_s, apr_t, apr_s, data_fractions
 
 
