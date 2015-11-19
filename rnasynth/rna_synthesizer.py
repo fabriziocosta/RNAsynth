@@ -171,8 +171,12 @@ class RNASynthesizerInitializer(object):
      n_synthesized_sequences_per_seed_sequence : int (default 2)
              Option for setting the number of synthesized sequences per constraint.
 
-     instance_score_threshold : int (default 0)
+
+     instance_score_threshold_in : int (default 0)
              Predicted score threshold for filtering synthesized sequences.
+
+     instance_score_threshold_out :int (default 1)
+            Predicted score threshold for filtering graphs.
 
      train_to_test_split_ratio : float (default 0.2)
              Ratio for splitting the sample dataset into train and test datasets.
@@ -217,6 +221,7 @@ class RNASynthesizerInitializer(object):
                  importance_threshold_structure_constraint=0,
                  min_size_connected_component_structure_constraint=1,
                  min_size_connected_component_unpaired_structure_constraint=1,
+                 # designer
                  Cstr="",
                  Cseq="",
                  tGC=[],
@@ -253,10 +258,12 @@ class RNASynthesizerInitializer(object):
                  Cseqweight=1.0,
                  omega=2.23,
                  time=600,
+                 # pre_processor
                  shape_type=5,
                  energy_range=35,
                  max_num=3,
                  split_components=True,
+                 # synthesizer
                  instance_score_threshold_in=0,
                  instance_score_threshold_out=1,
                  shuffle_order=2,
