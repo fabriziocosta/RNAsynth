@@ -19,6 +19,61 @@ class AbstractDesigner(object):
 
 class AntaRNAv109Designer(AbstractDesigner):
 
+    """ Designer class wrapping AntaRNAv109. Extends the AbstractDesigner.
+
+     Parameters
+     ----------
+     tGC : float (deafualt 0.5)
+
+     colonies : int (default 1)
+
+     name : str (default 'antaRNA_')
+
+     alpha : float (default 1.0)
+
+     beta : float (default 1.0)
+
+     evaporation_rate : float (default 0.2)
+
+     struct_correction_term : float (default 0.5)
+
+     GC_correction_term : float (default 5.0)
+
+     seq_correction_term : float (default 1.0)
+
+     degreeOfSequenceInducement : int (default 1)
+
+     file_id : str (default 'STDOUT')
+
+     verbose : str (default False)
+
+     output_verbose : bool (default False)
+
+     tGCmax : float (default -1.0)
+
+     tGCvar : float (default -1.0)
+
+     termination_convergence : int (default 50)
+
+     convergence_count : int (default 130)
+
+     reset_limit : int (default 5)
+
+     improve : str (deafult 's')
+
+     temperature :float (default 37.0)
+
+     paramFile : str (deafult '')
+
+     return_mod : bool (default True)
+
+     seed : str (deafult 'none')
+
+     For parameter description, please refer to :
+     https://github.com/RobertKleinkauf/antaRNA
+
+    """
+
     def __init__(self,
                  tGC=0.5,
                  colonies=1,
@@ -68,7 +123,7 @@ class AntaRNAv109Designer(AbstractDesigner):
         self.params['paramFile'] = paramFile
         self.params['return_mod'] = return_mod
         self.params['seed'] = seed
-        logger.info('Instantiated an instance of AntaRNAv109Designer.')
+        logger.debug('Instantiated an instance of AntaRNAv109Designer.')
 
     def design(self, constraints=None):
         dot_bracket_constraint_string = constraints[0]
@@ -81,6 +136,89 @@ class AntaRNAv109Designer(AbstractDesigner):
 
 
 class AntaRNAv117Designer(AbstractDesigner):
+
+    """ Designer class wrapping AntaRNAv117. Extends the AbstractDesigner.
+
+
+     Parameters
+     ----------
+
+     Cstr : str (default "")
+
+     Cseq : str (default "")
+
+     tGC : list (default [])
+
+     level : int (default 1)
+
+     tGCmax : float (default -1.0)
+
+     tGCvar : float (default -1.0)
+
+     temperature : float (default 37.0)
+
+     paramFile : str (default "")
+
+     noGUBasePair : bool (default False)
+
+     noLBPmanagement : bool (default True)
+
+     pseudoknots : bool (default True)
+
+     usedProgram : str (default "RNAfold")
+
+     pkprogram : str (default "pKiss")
+
+     pkparameter : bool (default False)
+
+     HotKnots_PATH : str (default "")
+
+     strategy : str (default "A")
+
+     noOfColonies : int (default 1)
+
+     output_file : str (default "STDOUT")
+
+     py : bool (default True)
+
+     name : str (default "antaRNA")
+
+     verbose : bool (default False)
+
+     output_verbose : bool (default False)
+
+     seed : str (default "none")
+
+     improve_procedure : (default "s")
+
+     Resets : int (default 5)
+
+     ants_per_selection: int (default 10)
+
+     ConvergenceCount : int (default 130)
+
+     antsTerConv : int (default 50)
+
+     alpha : float (default 1.0)
+
+     beta : float (default 1.0)
+
+     ER : float (default 0.2)
+
+     Cstrweight : float (default 0.5)
+
+     Cgcweight : float (default 5.0)
+
+     Cseqweight : float (default 1.0)
+
+     omega : float (default 2.23)
+
+     time : int (default 600)
+
+     For parameter description, please refer to :
+     https://github.com/RobertKleinkauf/antaRNA
+
+     """
 
     def __init__(self,
                  Cstr="",
@@ -166,8 +304,20 @@ class AntaRNAv117Designer(AbstractDesigner):
         logger.debug('Instantiated an instance of AntaRNAv117Designer.')
 
     def design(self, constraints=None):
-        """
-        DOCUMENTATION
+
+        """ The main method for producing new RNA sequences complying with the given constraint set.
+
+         This method produces new RNA sequences using the instantiated designer instance.
+
+         Parameters
+         -------
+         constraints : list
+             Containing 3 constraints of structure, sequence, and GC-content respectively
+
+         Returns
+         -------
+         result : str
+              String containing 'A','U', 'G', and 'C' characters
         """
         self.designer.params.Cstr = constraints[0]
         self.designer.params.Cseq = constraints[1]

@@ -5,20 +5,26 @@ import networkx as nx
 
 
 class ConstraintExtractor():
-    """
-    importance_threshold_sequence_constraint : int (default 1)
+
+    """ Class for extracting sequence and structure constraints from annotated graphs representing RNA secondary structures.
+
+
+     Parameters
+     ----------
+
+     importance_threshold_sequence_constraint : int (default 1)
             Classification score threshold for identifying important nucleotides in a sequence.
 
-    min_size_connected_component_sequence_constraint : int (default 3)
+     min_size_connected_component_sequence_constraint : int (default 3)
             Minimum number of adjacent important nucleotides which can form a sequence constraint.
 
-    importance_threshold_structure_constraint : int (default 0)
+     importance_threshold_structure_constraint : int (default 0)
             Classification score threshold for labeling important basepairs in a secondary structure.
 
-    min_size_connected_component_structure_constraint : int (default 1)
+     min_size_connected_component_structure_constraint : int (default 1)
             Minimum number of adjacent basepairs which can form a secondary structure constraint.
 
-    min_size_connected_component_unpaired_structure_constraint : int (default 1)
+     min_size_connected_component_unpaired_structure_constraint : int (default 1)
             Minimum number of adjacent backbones which can form a secondary structure constraint.
     """
 
@@ -35,11 +41,25 @@ class ConstraintExtractor():
         self.min_size_connected_component_unpaired_structure_constraint = min_size_connected_component_unpaired_structure_constraint
 
     def extract_constraints(self, graphs):
-        """
-        Generator function which yields sequence and structure constraint strings extracted
-        from an annotated Networkx graph.
-        Accepts connectivity values and thresholds for sequence and structure constraints
-        for the same graph separately .
+
+        """ The main method is a generator and yields the extracted sequence, structure, and gc-content constraints.
+
+         Generator function which yields sequence and structure constraint strings extracted from an annotated Networkx graph.
+         Accepts connectivity values and thresholds for sequence and structure constraints for the same graph separately .
+
+         Returns
+         -------
+         struct : str
+             String containing 'N', 'A','U', 'G', 'C' and '.' characters
+
+         cseq : str
+             String containing '(', ')', and '.' characters
+
+         gc_content : float
+             Float representing the GC-content of the original sequence
+
+         fasta_id : str
+             String representing the fasta header of the original sequence
         """
         for g in graphs:
             fasta_id = g.graph['id']

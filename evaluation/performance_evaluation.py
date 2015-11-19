@@ -13,8 +13,8 @@ from eden.util import random_bipartition_iter
 from rnasynth.rna_synthesizer import RNASynthesizerInitializer
 
 
-from util.dataset import split_to_train_and_test
-from util.dataset import fit_evaluate
+from dataset import split_to_train_and_test
+from dataset import fit_evaluate
 
 
 logger = logging.getLogger(__name__)
@@ -171,8 +171,6 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
-    parser.add_argument('--antaRNA_params', '-p', type=str,
-                        default='./antaRNA.ini', help='antaRNA initialization file')
     parser.add_argument('--n_experiment_repetitions', '-j',
                         type=int, default=10, help='runs per experiment')
     parser.add_argument('--train_to_test_split_ratio', '-r',
