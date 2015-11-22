@@ -457,8 +457,8 @@ class RNASynth(object):
         for (dot_bracket, seq_constraint, gc_content, fasta_id) in iterable:
             for count in range(self._n_synthesized_seqs_per_seed_seq):
                 sequence = self.designer.design((dot_bracket, seq_constraint, gc_content))
-                header = fasta_id + '_' + str(count) + '\n' +\
-                    dot_bracket.replace('A', '-') + '\n' +\
+                header = fasta_id + ';' + str(count) + ';' +\
+                    dot_bracket.replace('A', '-') + ';' +\
                     seq_constraint.replace('N', '-')
                 yield header, sequence
 
