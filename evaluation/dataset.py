@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from itertools import tee
+from itertools import islice
 import logging
 
 from eden.converter.rna.rnafold import rnafold_to_eden
@@ -30,9 +31,11 @@ def binary_classification_dataset_setup(iterable_seq=None, negative_shuffle_rati
     return iterable_graph, iterable_graph_neg
 
 
-def split_to_train_and_test(rfam_id=None, train_to_test_split_ratio=None):
+def split_to_train_and_test(rfam_id=None, train_to_test_split_ratio=None, number_of_samples=None):
 
     iterable = fasta_to_sequence(rfam_url(rfam_id))
+    if not(number_of_samples):
+        iterable = islice(iterable, number_of_samples)
     train, test = random_bipartition_iter(
         iterable, relative_size=train_to_test_split_ratio)
     return train, test

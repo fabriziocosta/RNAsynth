@@ -95,7 +95,7 @@ def batch_performance_evaluation(params, synthesizer=None, iter_train=None, iter
     return e_roc_t, e_apr_t, e_roc_s, e_apr_s, elapsed_time
 
 
-def learning_curve(params):
+def learning_curve(params, synthesizer=RNASynthesizerInitializer().synthesizer):
     """
     """
     rfam_id = params['rfam_id']
@@ -132,7 +132,6 @@ def learning_curve(params):
         iter_test, iter_test_ = tee(iter_test)
 
         # Create an instance of the synthesizer object.
-        synthesizer = RNASynthesizerInitializer().synthesizer
         mroct, maprt, mrocs, maprs, elapsed_time = batch_performance_evaluation(params,
                                                                                 synthesizer=synthesizer,
                                                                                 iter_train=iter_train_,
@@ -171,6 +170,9 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--rfam_id', '-i', type=str, default='RF00005', help='rfam family ID')
+    parser.add_argument(
+        '--number_of_samples', '-samples', type=int, default=None,
+        help='number of sequences from the sample dataset used in the experiment')
     parser.add_argument('--n_experiment_repetitions', '-j',
                         type=int, default=10, help='runs per experiment')
     parser.add_argument('--train_to_test_split_ratio', '-r',
@@ -195,8 +197,7 @@ def get_args():
 
 
 if __name__ == "__main__":
-    """
-    """
+
     logging.basicConfig(level=logging.INFO)
     logger.info('Call to performance_evaluation module.')
 
