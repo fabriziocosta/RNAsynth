@@ -104,6 +104,7 @@ def learning_curve(params, synthesizer=RNASynthesizerInitializer().synthesizer):
     data_fraction_lower_bound = params['data_fraction_lower_bound']
     data_fraction_upper_bound = params['data_fraction_upper_bound']
     data_fraction_chunks = params['data_fraction_chunks']
+    number_of_samples = params['number_of_samples']
 
     if not(check_data_fractions_integrity(data_fraction_lower_bound, data_fraction_upper_bound,
                                           data_fraction_chunks)):
@@ -117,7 +118,7 @@ def learning_curve(params, synthesizer=RNASynthesizerInitializer().synthesizer):
     logger.info('Starting RNA Synthesis experiment for %s ...' % rfam_id)
 
     iter_train, iter_test = split_to_train_and_test(
-        rfam_id=rfam_id, train_to_test_split_ratio=train_to_test_split_ratio)
+        rfam_id=rfam_id, train_to_test_split_ratio=train_to_test_split_ratio, number_of_samples=number_of_samples)
 
     roc_t = []
     roc_s = []
