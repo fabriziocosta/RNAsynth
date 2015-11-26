@@ -467,6 +467,8 @@ class RNASynth(object):
         predictions = self.vectorizer.predict(graphs, self.estimator)
         for prediction, graph in izip(predictions, graphs_):
             if prediction > self._instance_score_threshold_in:
+                logger.debug('filter_graph: svm score: %.2f vs %.2f' %
+                             (prediction, self._instance_score_threshold_in))
                 yield graph
 
     def _filter_seqs(self, seqs):
@@ -475,6 +477,8 @@ class RNASynth(object):
         predictions = self.vectorizer.predict(graphs, self.estimator)
         for prediction, seq in izip(predictions, seqs_):
             if prediction > self._instance_score_threshold_out:
+                logger.debug('filter_seq: svm score: %.2f vs %.2f' %
+                             (prediction, self._instance_score_threshold_out))
                 yield seq
 
     def sample(self, seqs):
