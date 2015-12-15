@@ -19,6 +19,7 @@ develop-eggs
 .svn
 
 *~
+*.log
 
 # Installer logs
 pip-log.txt
