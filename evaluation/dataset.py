@@ -36,7 +36,8 @@ def split_to_train_and_test(rfam_id=None, train_to_test_split_ratio=None, number
     iterable = fasta_to_sequence(rfam_url(rfam_id))
     if number_of_samples:
         iterable = islice(iterable, number_of_samples)
-        logger.info('Experiment cunducted with %d sample sequences' % number_of_samples)
+        logger.info('Experiment cunducted with %d sample sequences' %
+                    number_of_samples)
 
     train, test = random_bipartition_iter(
         iterable, relative_size=train_to_test_split_ratio)
